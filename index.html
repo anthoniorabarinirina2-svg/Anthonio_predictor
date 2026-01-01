@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anthonio Predictor Pro - SAKA Edition</title>
+    <style>
+        /* Design Sombre Casino */
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: #eaecef; text-align: center; padding: 20px; margin: 0; }
+        
+        /* Écran de verrouillage par mot de passe */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0b0e11; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .container { max-width: 400px; margin: auto; background: #1e2329; padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .stat-box { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .stat { background: #2b3139; padding: 12px; border-radius: 10px; width: 45%; border: 1px solid #444; }
+        .stat span { color: #f0b90b; font-weight: bold; font-size: 1.3em; }
+
+        input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #474d57; background: #12161c; color: white; font-size: 16px; text-align: center; }
+        
+        button { width: 100%; background: #f0b90b; color: black; padding: 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        button:active { transform: scale(0.95); }
+
+        #prediction { margin-top: 20px; padding: 20px; border-radius: 10px; font-weight: bold; display: none; min-height: 60px; }
+        .signal-rose { background: #f02d7d; color: white; animation: blink 1s infinite; border: 2px solid gold; }
+        .attente { background: #2b3139; color: #aaa; border: 1px dashed #555; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="lock-screen">
+    <div style="font-size: 40px;">🔑</div>
+    <h2 style="color: #f0b90b;">ACCÈS SÉCURISÉ</h2>
+    <p>Entrez le code SAKA</p>
+    <input type="password" id="pass-input" placeholder="Mot de passe...">
+    <button onclick="verifierPass()" style="width: 250px;">ENTRER</button>
+    <p id="error-msg" style="color: #ff4444; display: none; margin-top: 10px;">Code incorrect !</p>
+</div>
+
+<div id="main-content" style="display: none;">
+    <div class="container">
+        <h2 style="color: #f0b90b;">Anthonio Predictor</h2>
+        
+        <div class="stat-box">
+            <div class="stat">Cycle<br><span id="timer">90:00</span></div>
+            <div class="stat">Vols<br><span id="tourCount">0</span></div>
+        </div>
+
+        <input type="text" id="hist" placeholder="Ex: 1.20, 15.40, 2.05">
+        <button onclick="analyser()">ANALYSER LE SIGNAL</button>
+        <button onclick="resetCycle()" style="background:#333; color:#999; font-size:12px; margin-top:20px;">RESET CYCLE</button>
+
+        <div id="prediction"></div>
+    </div>
+</div>
+
+<script>
+    const MOT_DE_PASSE = "SAKA2026";
+
+    function verifierPass() {
+        let input = document.getElementById('pass-input').value;
+        if(input === MOT_DE_PASSE) {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            startTimer();
+        } else {
+            document.getElementById('error-msg').style.display = 'block';
+        }
+    }
+
+    let tours = 0, minutes = 90, secondes = 0;
+
+    function startTimer() {
+        setInterval(() => {
+            if(secondes == 0) { minutes--; secondes = 59; } else { secondes--; }
+            document.getElementById('timer').innerText = minutes + ":" + (secondes < 10 ? "0"+secondes : secondes);
+        }, 1000);
+    }
+
+    function analyser() {
+        tours++;
+        document.getElementById('tourCount').innerText = tours;
+        let input = document.getElementById('hist').value;
+        let val = input.split(',').map(Number);
+        let res = document.getElementById('prediction');
+        res.style.display = "block";
+
+        if (val.some(x => x >= 8 && x <= 18)) {
+            res.className = "signal-rose";
+            res.innerHTML = "🚨 SIGNAL JACKPOT DÉTECTÉ 🚨<br>Jouez les 5 prochains tours (Cible x50+)";
+        } else {
+            res.className = "attente";
+            res.innerHTML = "ANALYSE EN COURS...<br>Attendez un signal violet entre 8x et 18x.";
+        }
+    }
+
+    function resetCycle() {
+        minutes = 90; secondes = 0; tours = 0;
+        document.getElementById('tourCount').innerText = "0";
+        document.getElementById('prediction').style.display = "none";
+    }
+</script>
+</body>
+</html>
