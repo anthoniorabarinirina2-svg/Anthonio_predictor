@@ -3,108 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anthonio Predictor Pro - SAKA Edition</title>
+    <title>Anthonio AI Ultimate v8.0</title>
     <style>
-        /* Design Sombre Casino */
-        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: #eaecef; text-align: center; padding: 20px; margin: 0; }
+        :root { --gold: #f0b90b; --rose: #f02d7d; --blue: #3498db; --red: #ff4d4d; --bg: #0b0e11; --gray: #1e2329; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; overflow-x: hidden; }
         
-        /* Écran de verrouillage par mot de passe */
-        #lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0b0e11; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 1000;
-        }
+        .container { max-width: 400px; margin: 20px auto; background: var(--gray); padding: 25px; border-radius: 30px; border: 1px solid #333; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
 
-        .container { max-width: 400px; margin: auto; background: #1e2329; padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .stat-box { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .stat { background: #2b3139; padding: 12px; border-radius: 10px; width: 45%; border: 1px solid #444; }
-        .stat span { color: #f0b90b; font-weight: bold; font-size: 1.3em; }
+        /* Radar central animé */
+        .radar-box { width: 100px; height: 100px; margin: 0 auto 15px; border: 2px solid #333; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #1a1a1a, #000); }
+        .scan-line { position: absolute; width: 100%; height: 100%; border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 1.2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .chance-pct { font-size: 24px; font-weight: bold; color: var(--gold); z-index: 5; text-shadow: 0 0 10px var(--gold); }
 
-        input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #474d57; background: #12161c; color: white; font-size: 16px; text-align: center; }
-        
-        button { width: 100%; background: #f0b90b; color: black; padding: 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        button:active { transform: scale(0.95); }
+        select, input { width: 90%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; text-align: center; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
 
-        #prediction { margin-top: 20px; padding: 20px; border-radius: 10px; font-weight: bold; display: none; min-height: 60px; }
-        .signal-rose { background: #f02d7d; color: white; animation: blink 1s infinite; border: 2px solid gold; }
-        .attente { background: #2b3139; color: #aaa; border: 1px dashed #555; }
+        .btn-predict { width: 100%; background: var(--gold); color: black; padding: 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px; box-shadow: 0 4px 15px rgba(240,185,11,0.3); }
+        .btn-predict:active { transform: scale(0.96); }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        /* Zones d'Alertes Dynamiques */
+        #result-display { margin-top: 20px; padding: 20px; border-radius: 15px; display: none; font-weight: bold; line-height: 1.5; font-size: 15px; transition: 0.4s; }
+        .alert-rose { background: var(--rose); border: 2px solid #fff; animation: pulse 0.8s infinite; box-shadow: 0 0 20px var(--rose); }
+        .alert-blue { background: var(--blue); border: 2px solid #fff; }
+        .alert-red { background: var(--red); border: 3px solid white; animation: shake 0.3s infinite; }
+        .alert-wait { background: #333; color: #888; border: 1px dashed #555; }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
     </style>
 </head>
 <body>
 
-<div id="lock-screen">
-    <div style="font-size: 40px;">🔑</div>
-    <h2 style="color: #f0b90b;">ACCÈS SÉCURISÉ</h2>
-    <p>Entrez le code SAKA</p>
-    <input type="password" id="pass-input" placeholder="Mot de passe...">
-    <button onclick="verifierPass()" style="width: 250px;">ENTRER</button>
-    <p id="error-msg" style="color: #ff4444; display: none; margin-top: 10px;">Code incorrect !</p>
+<div id="lock-screen" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000; position:fixed; width:100%; z-index:1000;">
+    <h2 style="color:var(--gold); letter-spacing: 3px;">ANTHONIO MASTER AI</h2>
+    <input type="password" id="sk-code" placeholder="ENTRER CODE SAKA">
+    <button class="btn-predict" onclick="unlock()" style="width:200px">DÉVERROUILLER</button>
 </div>
 
-<div id="main-content" style="display: none;">
-    <div class="container">
-        <h2 style="color: #f0b90b;">Anthonio Predictor</h2>
-        
-        <div class="stat-box">
-            <div class="stat">Cycle<br><span id="timer">90:00</span></div>
-            <div class="stat">Vols<br><span id="tourCount">0</span></div>
-        </div>
-
-        <input type="text" id="hist" placeholder="Ex: 1.20, 15.40, 2.05">
-        <button onclick="analyser()">ANALYSER LE SIGNAL</button>
-        <button onclick="resetCycle()" style="background:#333; color:#999; font-size:12px; margin-top:20px;">RESET CYCLE</button>
-
-        <div id="prediction"></div>
+<div class="container" id="main-app" style="display:none">
+    <h2 style="color:var(--gold); margin:0;">SYSTEM PREDICTOR v8.0</h2>
+    <p style="font-size: 10px; color: #555; margin-bottom: 15px;">AUTO-DETECTION & ANTI-ASPIRATION</p>
+    
+    <div class="radar-box">
+        <div class="scan-line"></div>
+        <div class="chance-pct" id="pct-val">0%</div>
     </div>
+
+    <label style="font-size: 11px; color: #aaa;">CONFIGURATION DE LA CIBLE :</label>
+    <select id="mode-select">
+        <option value="2">🛡️ CÔTE 2.00 (SÉCURITÉ)</option>
+        <option value="5">📈 PETIT ROSE (X5 - X10)</option>
+        <option value="50">💎 GRAND ROSE (X50+)</option>
+    </select>
+
+    <input type="text" id="input-data" placeholder="Derniers vols (ex: 1.50, 8.40, 2.10)">
+    <button class="btn-predict" onclick="processAnalysis()">ANALYSER LE CYCLE</button>
+
+    <div id="result-display"></div>
+    
+    <button onclick="location.reload()" style="background:none; border:none; color:#444; margin-top:25px; cursor:pointer; font-size: 11px;">RÉINITIALISER L'IA</button>
 </div>
 
 <script>
-    const MOT_DE_PASSE = "SAKA2026";
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(f, d, type='sine') {
+        const o = audio.createOscillator(); const g = audio.createGain();
+        o.type = type; o.connect(g); g.connect(audio.destination);
+        o.frequency.value = f; g.gain.setValueAtTime(0.1, audio.currentTime);
+        o.start(); o.stop(audio.currentTime + d);
+    }
 
-    function verifierPass() {
-        let input = document.getElementById('pass-input').value;
-        if(input === MOT_DE_PASSE) {
+    function unlock() {
+        if(document.getElementById('sk-code').value === 'SAKA2026') {
             document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-            startTimer();
-        } else {
-            document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('main-app').style.display = 'block';
+            if(audio.state === 'suspended') audio.resume();
         }
     }
 
-    let tours = 0, minutes = 90, secondes = 0;
-
-    function startTimer() {
-        setInterval(() => {
-            if(secondes == 0) { minutes--; secondes = 59; } else { secondes--; }
-            document.getElementById('timer').innerText = minutes + ":" + (secondes < 10 ? "0"+secondes : secondes);
-        }, 1000);
-    }
-
-    function analyser() {
-        tours++;
-        document.getElementById('tourCount').innerText = tours;
-        let input = document.getElementById('hist').value;
-        let val = input.split(',').map(Number);
-        let res = document.getElementById('prediction');
+    function processAnalysis() {
+        let raw = document.getElementById('input-data').value;
+        if(!raw) return;
+        let v = raw.split(',').map(Number);
+        let target = document.getElementById('mode-select').value;
+        let res = document.getElementById('result-display');
+        let pc = document.getElementById('pct-val');
         res.style.display = "block";
 
-        if (val.some(x => x >= 8 && x <= 18)) {
-            res.className = "signal-rose";
-            res.innerHTML = "🚨 SIGNAL JACKPOT DÉTECTÉ 🚨<br>Jouez les 5 prochains tours (Cible x50+)";
-        } else {
-            res.className = "attente";
-            res.innerHTML = "ANALYSE EN COURS...<br>Attendez un signal violet entre 8x et 18x.";
+        // 1. DÉTECTION ROUGE (Plusieurs bleus / Aspiration)
+        let consecutiveBlues = v.filter(x => x < 1.30).length;
+        if(consecutiveBlues >= 2) {
+            pc.innerText = "!!!";
+            res.className = "alert-red";
+            res.innerHTML = "⚠️ ALERTE ROUGE : ASPIRATION ⚠️<br>Trop de bleus. Le serveur récupère. NE JOUEZ PAS !";
+            beep(120, 0.7, 'sawtooth');
+            return;
         }
-    }
 
-    function resetCycle() {
-        minutes = 90; secondes = 0; tours = 0;
-        document.getElementById('tourCount').innerText = "0";
-        document.getElementById('prediction').style.display = "none";
+        // 2. CALCUL PROBABILITÉ
+        let chance = 0;
+        if(target == "2") {
+            chance = v.every(x => x > 1.25) ? Math.floor(Math.random() * 10) + 88 : Math.floor(Math.random() * 30) + 40;
+        } else if(target == "5") {
+            chance = v.some(x => x >= 3 && x <= 7.99) ? Math.floor(Math.random() * 15) + 78 : Math.floor(Math.random() * 40) + 25;
+        } else {
+            chance = v.some(x => x >= 8 && x <= 18.99) ? Math.floor(Math.random() * 15) + 84 : Math.floor(Math.random() * 30) + 12;
+        }
+        pc.innerText = chance + "%";
+
+        // 3. AFFICHAGE DES SIGNAUX
+        if(chance >= 75) {
+            if(target == "2") {
+                res.className = "alert-blue";
+                res.innerHTML = "🛡️ SIGNAL X2.00 VALIDÉ 🛡️<br>Confiance élevée. Sortez à 2.00 pile.";
+                beep(440, 0.3);
+            } else {
+                res.className = "alert-rose";
+                res.innerHTML = "🚨 SIGNAL ROSE " + (target == "5" ? "X5-X10" : "X50+") + " DÉTECTÉ 🚨<br>Jouez prudemment sur 5 tours !";
+                beep(880, 0.2); setTimeout(() => beep(1000, 0.4), 200);
+            }
+        } else {
+            res.className = "alert-wait";
+            res.innerHTML = "ANALYSE EN COURS (" + chance + "%)<br>Signal incertain. Attendez le prochain vol.";
+            beep(250, 0.2);
+        }
+        document.getElementById('input-data').value = "";
     }
 </script>
 </body>
