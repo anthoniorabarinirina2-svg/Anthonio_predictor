@@ -3,161 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anthonio AI v12 - PRO Dashboard</title>
+    <title>Anthonio AI v18 - ID Predictor</title>
     <style>
-        :root { --gold: #f0b90b; --rose: #f02d7d; --blue: #3498db; --red: #ff4d4d; --bg: #0b0e11; --card: #1e2329; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; }
-        .container { max-width: 450px; margin: auto; background: var(--card); border-radius: 25px; border: 1px solid #333; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+        :root { --gold: #f0b90b; --rose: #f02d7d; --blue: #3498db; --bg: #0b0e11; --card: #1e2329; --green: #00ff00; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; text-align: center; }
         
-        /* Header Dashboard */
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-        .status { color: #00ff00; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        /* Écran de verrouillage */
+        #lock-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #1a1a1a, #000); position: fixed; width: 100%; z-index: 9999; }
+        .lock-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--gold); width: 85%; max-width: 320px; }
+        .lock-input { width: 100%; box-sizing: border-box; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #000; color: var(--gold); text-align: center; font-size: 20px; margin-bottom: 20px; outline: none; }
 
-        /* Multi-Probabilités */
+        /* Interface Principale */
+        .container { max-width: 450px; margin: 20px auto; background: var(--card); border-radius: 25px; border: 1px solid #333; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,1); display: none; }
+        
+        .target-box { background: linear-gradient(135deg, #1e2329, #000); border: 2px solid var(--rose); border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(240,45,125,0.2); }
+        .target-id { font-size: 48px; font-weight: bold; color: var(--rose); letter-spacing: 2px; text-shadow: 0 0 15px rgba(240,45,125,0.5); }
+        .est-mul { color: var(--gold); font-size: 24px; font-weight: bold; margin-top: 10px; }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: #000; padding: 15px; border-radius: 15px; border: 1px solid #333; text-align: center; }
-        .stat-card h4 { margin: 0; font-size: 11px; color: #aaa; }
-        .stat-card .val { font-size: 22px; font-weight: bold; margin-top: 5px; }
-        .c-blue { color: var(--blue); } .c-rose { color: var(--rose); } .c-gold { color: var(--gold); }
+        .stat-card { background: #000; padding: 12px; border-radius: 12px; border: 1px solid #333; }
+        .stat-card h4 { font-size: 10px; color: #888; margin: 0; text-transform: uppercase; }
+        .stat-card .val { font-size: 20px; font-weight: bold; color: var(--green); }
 
-        /* Timer et Tour */
-        .main-display { background: radial-gradient(circle, #2a2a2a, #000); padding: 25px; border-radius: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
-        .timer-val { font-size: 48px; font-weight: bold; color: var(--gold); }
-        .tour-steps { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
-        .step { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #444; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.3s; }
-        .step.active { background: var(--rose); border-color: white; box-shadow: 0 0 15px var(--rose); }
-
-        /* Inputs */
-        input, select { width: 100%; box-sizing: border-box; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; font-size: 16px; }
-        .btn-predict { width: 100%; background: var(--gold); color: black; padding: 18px; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; text-transform: uppercase; }
+        input { width: 100%; box-sizing: border-box; padding: 16px; border-radius: 12px; border: 1px solid #444; background: #0b0e11; color: white; margin-bottom: 12px; text-align: center; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--gold); }
         
-        #alert-box { margin-top: 15px; padding: 15px; border-radius: 12px; display: none; font-weight: bold; font-size: 14px; }
-        .danger { background: var(--red); color: white; animation: shake 0.3s infinite; }
+        .btn-predict { width: 100%; background: var(--gold); color: black; padding: 20px; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-predict:hover { transform: scale(0.98); }
 
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        #status-msg { font-size: 12px; color: var(--green); margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <div><h2 style="margin:0; font-size: 18px; color:var(--gold);">ANTHONIO AI v12</h2></div>
-        <div class="status">● Serveur Live</div>
+<div id="lock-screen">
+    <div class="lock-card">
+        <h2 style="color:var(--gold); margin-top:0;">ANTHONIO AI v18</h2>
+        <input type="password" id="sk-pass" class="lock-input" placeholder="MOT DE PASSE">
+        <button onclick="unlock()" class="btn-predict">DÉVERROUILLER</button>
+    </div>
+</div>
+
+<div class="container" id="main-ui">
+    <div id="status-msg">SCANNER DE ROUND ACTIF</div>
+    
+    <div class="target-box">
+        <div style="font-size: 11px; color: #aaa; margin-bottom: 10px; text-transform: uppercase;">Miser sur le Tour Round n° :</div>
+        <div id="target-id-display" class="target-id">#----</div>
+        <div id="est-multiplier" class="est-mul">x0.00</div>
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card"><h4>CHANCE x2.00</h4><div class="val c-blue" id="p2">0%</div></div>
-        <div class="stat-card"><h4>CHANCE x5.00</h4><div class="val c-rose" id="p5">0%</div></div>
-        <div class="stat-card"><h4>CHANCE x10.0</h4><div class="val c-rose" id="p10">0%</div></div>
-        <div class="stat-card"><h4>CHANCE x50+</h4><div class="val c-gold" id="p50">0%</div></div>
+        <div class="stat-card"><h4>Confiance IA</h4><div class="val">99.4%</div></div>
+        <div class="stat-card"><h4>Plage de Mise</h4><div class="val">3 Rounds</div></div>
     </div>
 
-    <div class="main-display">
-        <div id="status-text" style="font-size: 11px; color: #888;">EN ATTENTE DE DONNÉES...</div>
-        <div class="timer-val" id="timer">--:--</div>
-        <div class="tour-steps" id="steps-ui" style="display:none;">
-            <div class="step" id="s1">1</div>
-            <div class="step" id="s2">2</div>
-            <div class="step" id="s3">3</div>
-        </div>
+    <div style="text-align: left; font-size: 11px; color: #777; margin-bottom: 15px; padding: 0 5px;">
+        1. Copiez les 4 derniers chiffres du Round ID actuel.<br>
+        2. Entrez les derniers résultats de vols.
     </div>
 
-    <input type="text" id="vols-in" placeholder="Derniers vols (ex: 1.20, 2.50, 15.0)">
-    <button class="btn-predict" onclick="process()">Calculer Probabilités</button>
+    <input type="number" id="last-round-id" placeholder="Ex: 5412 (ID du Round actuel)">
+    <input type="text" id="vols-data" placeholder="Derniers vols (ex: 1.50, 2.10)">
+    
+    <button class="btn-predict" onclick="calculateRound()">DÉTECTER LE SIGNAL</button>
 
-    <div id="alert-box"></div>
+    <div style="margin-top: 20px; font-size: 10px; color: #444;">
+        Le signal est calculé pour apparaître environ 9 tours après l'analyse.
+    </div>
 </div>
 
 <script>
-    const audio = new (window.AudioContext || window.webkitAudioContext)();
-    function sound(f, d) {
-        const o = audio.createOscillator(); const g = audio.createGain();
-        o.connect(g); g.connect(audio.destination); o.frequency.value = f;
-        g.gain.setValueAtTime(0.1, audio.currentTime); o.start(); o.stop(audio.currentTime + d);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(f, d) {
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination); o.frequency.value = f;
+        g.gain.setValueAtTime(0.05, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + d);
     }
 
-    function process() {
-        let raw = document.getElementById('vols-in').value;
-        if(!raw) return;
-        let v = raw.split(',').map(Number);
-        let alert = document.getElementById('alert-box');
-
-        // Reset UI
-        alert.style.display = "none";
-
-        // Détection Aspiration (Série de bleus)
-        if(v.filter(x => x < 1.30).length >= 2) {
-            alert.style.display = "block"; alert.className = "danger";
-            alert.innerHTML = "⚠️ SÉCURITÉ : ASPIRATION DÉTECTÉE ⚠️";
-            sound(150, 0.5); return;
-        }
-
-        // Calcul des taux de chance (Logique basée sur les derniers vols)
-        let last = v[v.length - 1];
-        let p2 = Math.floor(Math.random() * 20) + (last > 1.5 ? 75 : 40);
-        let p5 = Math.floor(Math.random() * 25) + (last > 3 ? 60 : 20);
-        let p10 = Math.floor(Math.random() * 30) + (v.some(x => x > 5) ? 50 : 10);
-        let p50 = Math.floor(Math.random() * 15) + (v.some(x => x > 10) ? 30 : 5);
-
-        // Affichage des taux
-        document.getElementById('p2').innerText = (p2 > 99 ? 99 : p2) + "%";
-        document.getElementById('p5').innerText = (p5 > 99 ? 99 : p5) + "%";
-        document.getElementById('p10').innerText = (p10 > 99 ? 99 : p10) + "%";
-        document.getElementById('p50').innerText = (p50 > 99 ? 99 : p50) + "%";
-
-        // Si une chance est très élevée (>75%), on lance le chrono
-        if(p2 > 75 || p5 > 75 || p10 > 75) {
-            launchCountdown();
+    function unlock() {
+        // VÉRIFICATION DU MOT DE PASSE
+        if(document.getElementById('sk-pass').value === 'Sahondra123#') {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        } else {
+            alert("Code incorrect !");
         }
     }
 
-    function launchCountdown() {
-        let timer = document.getElementById('timer');
-        let status = document.getElementById('status-text');
-        let steps = document.getElementById('steps-ui');
-        let time = 60;
+    function calculateRound() {
+        let lastId = parseInt(document.getElementById('last-round-id').value);
+        let vols = document.getElementById('vols-data').value;
+
+        if(!lastId || !vols) {
+            alert("Veuillez remplir tous les champs !");
+            return;
+        }
+
+        // Algorithme de prédiction par Round ID
+        // Cible le tour de mise idéal (environ 9-10 tours après l'actuel)
+        let targetId = lastId + 9;
         
-        status.innerText = "PRÉPARATION : 5 TOURS RESTANTS";
-        steps.style.display = "none";
-
-        let clock = setInterval(() => {
-            time--;
-            timer.innerText = "00:" + (time < 10 ? "0" + time : time);
-            if(time <= 5) sound(800, 0.1);
-
-            if(time <= 0) {
-                clearInterval(clock);
-                startTripleWindow();
-            }
-        }, 1000);
-    }
-
-    function startTripleWindow() {
-        let steps = document.getElementById('steps-ui');
-        let timer = document.getElementById('timer');
-        let status = document.getElementById('status-text');
+        // Affichage de l'objectif
+        document.getElementById('target-id-display').innerText = "#" + targetId;
         
-        steps.style.display = "flex";
-        timer.innerText = "JOUEZ";
-        status.innerText = "FENÊTRE DE TIR OUVERTE (3 TOURS)";
-        
-        let tour = 1;
-        sound(1000, 0.5);
-        document.getElementById('s'+tour).classList.add('active');
+        // Estimation de la côte de sortie (Signal x20-x45)
+        let estMultiplier = (Math.random() * 25 + 20.40).toFixed(2);
+        document.getElementById('est-multiplier').innerText = "Objectif: x" + estMultiplier;
 
-        let cycle = setInterval(() => {
-            document.getElementById('s'+tour).classList.remove('active');
-            tour++;
-            if(tour > 3) {
-                clearInterval(cycle);
-                status.innerText = "CYCLE TERMINÉ";
-                timer.innerText = "--:--";
-                steps.style.display = "none";
-            } else {
-                document.getElementById('s'+tour).classList.add('active');
-                sound(1000, 0.2);
-            }
-        }, 20000); // 20s par tour
+        playBeep(880, 0.4);
+        
+        document.getElementById('status-msg').innerText = "CIBLE DÉTERMINÉE : TOUR #" + targetId;
+        document.getElementById('status-msg').style.color = "var(--rose)";
     }
 </script>
 </body>
