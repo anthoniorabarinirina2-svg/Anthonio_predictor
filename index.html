@@ -2,82 +2,97 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anthonio AI - Logic Pro</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anthonio AI v18.6 - Fix</title>
     <style>
-        body { background: #0b0e11; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 15px; }
-        .card { background: #1e2329; padding: 25px; border-radius: 25px; border: 1px solid #f0b90b; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #lock { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
-        button { width: 100%; padding: 18px; background: #f0b90b; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; text-transform: uppercase; }
-        .res-box { margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 15px; }
-        #out { font-size: 32px; color: #f02d7d; font-weight: bold; display: block; margin-bottom: 5px; }
+        body { background: #0b0e11; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 15px; }
+        
+        /* ÉCRAN DE VERROUILLAGE FORCE */
+        #lock { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 9999; 
+        }
+        
+        .card { background: #1e2329; padding: 25px; border-radius: 25px; border: 1px solid #f0b90b; max-width: 400px; margin: auto; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 18px; background: #f0b90b; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; color: #000; }
+        
+        /* Interface cachée au départ */
+        #main-ui { display: none; }
+        
+        .res-box { margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 15px; border-left: 5px solid #f02d7d; }
+        #out { font-size: 35px; color: #f02d7d; font-weight: bold; display: block; }
         #wait { font-size: 18px; color: #3498db; font-weight: bold; }
-        #est { color: #f0b90b; font-size: 24px; font-weight: bold; margin-top: 10px; display: block; }
-        .info { font-size: 11px; color: #777; margin-top: 15px; }
+        #est { color: #f0b90b; font-size: 24px; font-weight: bold; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div id="lock">
     <h2 style="color:#f0b90b">SYSTÈME PRIVÉ</h2>
-    <input type="password" id="pw" placeholder="MOT DE PASSE">
-    <button onclick="check()">DÉVERROUILLER</button>
+    <div style="width: 80%; max-width: 300px;">
+        <input type="password" id="pw" placeholder="MOT DE PASSE">
+        <button type="button" onclick="unlockSystem()">ENTRER</button>
+    </div>
+    <p style="color: #444; font-size: 10px; margin-top: 20px;">ANTHONIO AI SECURITY v18.6</p>
 </div>
 
-<div class="card">
-    <h2 style="color:#f0b90b; margin-bottom: 5px;">ANTHONIO AI</h2>
-    <p style="font-size: 10px; color: #888; margin-bottom: 20px;">ANALYSEUR DE CYCLES BET261</p>
+<div id="main-ui" class="card">
+    <h2 style="color:#f0b90b; margin-bottom: 0;">ANTHONIO AI</h2>
+    <p style="font-size: 10px; color: #888; margin-bottom: 20px;">SYNCHRONISATION BET261</p>
     
     <div class="res-box">
-        <span id="wait">EN ATTENTE DE DONNÉES</span>
-        <span id="out">TOUR CIBLE : --</span>
-        <span id="est">x0.00</span>
+        <div id="wait">PRÊT POUR ANALYSE</div>
+        <div id="out">TOUR : --</div>
+        <div id="est">x0.00</div>
     </div>
 
-    <input type="number" id="id" placeholder="2 derniers chiffres ID (ex: 34)">
-    <input type="text" id="vols" placeholder="Derniers vols (ex: 1.20, 2.55, 1.05)">
+    <input type="number" id="id-manche" placeholder="2 derniers chiffres ID (ex: 34)">
+    <input type="text" id="vols" placeholder="Derniers vols (ex: 1.20, 2.45)">
     
-    <button onclick="analyze()">LANCER L'ANALYSE</button>
-
-    <p class="info">L'IA calcule l'écart optimal entre le dernier "Gros Vol" et le prochain cycle de paiement.</p>
+    <button type="button" onclick="calculate()">LANCER L'ANALYSE</button>
 </div>
 
 <script>
-    function check() {
-        if(document.getElementById('pw').value === 'Sahondra123#') document.getElementById('lock').style.display='none';
+    // Fonction de déverrouillage simplifiée
+    function unlockSystem() {
+        var pass = document.getElementById('pw').value;
+        if (pass === 'Sahondra123#') {
+            document.getElementById('lock').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+        } else {
+            alert("Mot de passe incorrect");
+        }
     }
 
-    function analyze() {
-        let idVal = parseInt(document.getElementById('id').value);
-        let volsInput = document.getElementById('vols').value;
-        if(isNaN(idVal) || !volsInput) return;
-
-        let vols = volsInput.split(',').map(Number);
+    // Fonction de calcul logique
+    function calculate() {
+        var idInput = document.getElementById('id-manche').value;
+        var volsInput = document.getElementById('vols').value;
         
-        // LOGIQUE : Si beaucoup de petits vols (< 2.0), le signal est retardé
-        let petitsVols = vols.filter(v => v < 2.0).length;
-        let ecart tours = 8; // Écart de base
-        
-        if(petitsVols >= 3) {
-            ecart = 12; // On attend plus longtemps car le serveur aspire
-        } else if (vols.some(v => v > 10)) {
-            ecart = 6; // Le cycle est déjà chaud
+        if (!idInput || !volsInput) {
+            alert("Remplissez l'ID et les vols");
+            return;
         }
 
-        let target = idVal + ecart;
+        var idVal = parseInt(idInput);
+        var vList = volsInput.split(',').map(Number);
         
-        // Si le tour dépasse 99, on revient au début (ex: 95 + 10 = 05)
-        if(target >= 100) target = target - 100;
-        let targetStr = target < 10 ? "0" + target : target;
+        // Logique de cycle : On cherche le paiement après 8 à 11 tours
+        var ecart = (vList[0] < 1.5) ? 11 : 8;
+        var target = idVal + ecart;
+        
+        // Gestion de la boucle des 100 tours
+        if (target >= 100) target -= 100;
+        var displayId = (target < 10) ? "0" + target : target;
 
-        document.getElementById('out').innerText = "TOUR CIBLE : #" + targetStr;
+        document.getElementById('out').innerText = "CIBLE : #" + displayId;
         document.getElementById('wait').innerText = "⏳ DANS " + ecart + " TOURS";
-        
-        // Estimation de côte logique
-        let estimation = (Math.random() * 15 + 18.20).toFixed(2);
-        document.getElementById('est').innerText = "CIBLE : x" + estimation;
+        document.getElementById('est').innerText = "CÔTE : x" + (Math.random() * 10 + 20).toFixed(2);
     }
 </script>
+
 </body>
 </html>
