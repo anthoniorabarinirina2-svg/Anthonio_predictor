@@ -2,59 +2,58 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>AVIATOR IA JACKPOT ENGINE</title>
+<title>AVIATOR IA – Naruto x Boruto</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  background:radial-gradient(circle at top,#0a2a4a,#020814);
-  color:#e6f6ff;
+  background:linear-gradient(135deg,#0b1020,#111827);
+  color:#e5e7eb;
   font-family:system-ui,Arial;
   margin:0;
   padding:20px;
   display:flex;
   justify-content:center;
 }
-.app{max-width:440px;width:100%}
+.app{max-width:420px;width:100%}
 .card{
-  background:#081f36;
-  border-radius:16px;
+  background:#0f172a;
+  border-radius:14px;
   padding:16px;
   margin-bottom:14px;
-  box-shadow:0 0 0 1px #0d4b7a;
+  border:1px solid #1e293b;
 }
 h2,h3{margin:0 0 10px 0}
 input,button{
   width:100%;
   padding:12px;
   margin-top:8px;
-  border-radius:12px;
+  border-radius:10px;
   border:none;
-  font-size:16px;
+  font-size:15px;
 }
 input{
-  background:#02111f;
-  color:#bfefff;
-  border:1px solid #0d4b7a;
+  background:#020617;
+  color:white;
+  border:1px solid #1e293b;
 }
 button{
-  background:#00d4ff;
-  color:#001018;
-  font-weight:bold;
+  background:linear-gradient(90deg,#2563eb,#f97316);
+  color:white;
+  font-weight:600;
   cursor:pointer;
 }
-button.red{background:#ff4b5c;color:white}
-.small{font-size:13px;color:#9fdcff}
 .pred{
-  margin-top:8px;
   padding:10px;
-  border-radius:12px;
-  border:1px solid #0d4b7a;
-  background:#041a2e;
+  border-radius:10px;
+  margin-top:8px;
+  background:#020617;
+  border:1px solid #1e293b;
 }
-.badge-jackpot{color:#00f6ff;font-weight:bold}
-.badge-good{color:#3cff9e}
-.badge-risk{color:#ff6b6b}
+.good{color:#22c55e}
+.warn{color:#f97316}
+.bad{color:#ef4444}
+.small{font-size:13px;color:#9ca3af}
 </style>
 </head>
 
@@ -62,125 +61,83 @@ button.red{background:#ff4b5c;color:white}
 <div class="app">
 
 <div class="card">
-<h2>🎮 AVIATOR IA SMART</h2>
-<div class="small">Minute & Seconde → Prediction | Heure → Jackpot</div>
+  <h2>AVIATOR IA</h2>
+  <div class="small">Naruto (stratégie) × Boruto (modern IA)</div>
 </div>
 
 <div class="card">
-<input id="v" type="number" step="0.01" placeholder="Dernier ROSE (≥5x)">
-<input id="h" type="number" placeholder="Heure du ROSE (0–23)">
-<input id="m" type="number" placeholder="Minute du ROSE (0–59)">
-<input id="s" type="number" placeholder="Seconde du ROSE (0–59)">
-<button onclick="predict()">ANALYSER</button>
+  <input id="v" type="number" step="0.01" placeholder="Dernier ROSE (≥4.00)">
+  <input id="h" type="number" placeholder="Heure (0–23)">
+  <input id="m" type="number" placeholder="Minute (0–59)">
+  <input id="s" type="number" placeholder="Seconde (0–59)">
+  <button onclick="analyze()">Analyser (Jutsu IA)</button>
 </div>
 
-<div class="card" id="result" style="display:none">
-<div id="prediction"></div>
-</div>
-
-<div class="card">
-<button onclick="record(true)">GAGNÉ ✅</button>
-<button class="red" onclick="record(false)">PERDU ❌</button>
+<div class="card" id="results" style="display:none">
+  <h3>4 Prédictions IA</h3>
+  <div id="list"></div>
 </div>
 
 <div class="card">
-<h3>Score IA</h3>
-<div id="score">50%</div>
+  <h3>Score IA (Hokage)</h3>
+  <div id="score">50%</div>
 </div>
 
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("aviatorAI")) || {
-  heat:Array.from({length:60},()=>({w:0,l:0})),
-  score:50
+/* ==== MÉMOIRE IA ==== */
+let AI = JSON.parse(localStorage.getItem("aviatorAI")) || {
+  score:50,
+  memory:[]
 };
-let lastS=null;
 
-/* =======================
-   PREDICTION
-   ======================= */
-function predict(){
-  const v=parseFloat(document.getElementById("v").value);
-  const h=parseInt(document.getElementById("h").value);
-  const m=parseInt(document.getElementById("m").value);
-  const s=parseInt(document.getElementById("s").value);
+/* ==== ANALYSE ==== */
+function analyze(){
+  const v = parseFloat(v=document.getElementById("v").value);
+  const h = parseInt(document.getElementById("h").value);
+  const m = parseInt(document.getElementById("m").value);
+  const s = parseInt(document.getElementById("s").value);
 
-  if(isNaN(v)||isNaN(h)||isNaN(m)||isNaN(s)){
-    alert("Valeurs invalides");
+  if([v,h,m,s].some(isNaN)){
+    alert("Valeurs manquantes");
     return;
   }
 
-  lastS=s;
-  let base=m*60+s;
-  let html="";
+  let list="";
+  let base = (h*0.6 + m*0.3 + s*0.1) % 10;
 
   for(let i=1;i<=4;i++){
+    let pm = (m + i*2) % 60;
+    let ps = (s + i*13 + Math.floor(base)) % 60;
 
-    /* === CALCUL MINUTE + SECONDE SEULEMENT === */
-    let chaos=Math.floor(Math.random()*16)-8;
-    let future=base+(i*45)+chaos;
+    let jackpot = (h + pm + ps) % 7;
+    let minCote = (4 + (base/10) + (jackpot*0.2)).toFixed(2);
 
-    let fm=Math.floor((future/60)%60);
-    let fs=future%60;
-    if(fs<0){fs+=60;fm--}
-    if(fm<0)fm+=60;
+    let level = minCote >= 6 ? "good" : minCote >= 5 ? "warn" : "bad";
 
-    /* === APPRENTISSAGE PAR SECONDE === */
-    let heat=data.heat[fs];
-    let danger=heat.l-heat.w;
-
-    let cote=2.4+(v/9)+(fm/120)+(fs/100)-(danger*0.25);
-    cote=Math.max(1.3,cote);
-
-    /* === JACKPOT : UTILISE L’HEURE === */
-    let jackpotScore=0;
-    if(cote>=4) jackpotScore+=30;
-    if(fs%2===0) jackpotScore+=15;
-    if(fm%5!==0) jackpotScore+=15;
-    if(h>=13&&h<=22) jackpotScore+=25; // 👈 HEURE ICI
-    if(data.score>=65) jackpotScore+=15;
-
-    let badge="";
-    if(jackpotScore>=70){
-      badge="<span class='badge-jackpot'>🎰 JACKPOT</span>";
-    }else if(jackpotScore>=55){
-      badge="<span class='badge-good'>✔ Bon signal</span>";
-    }else{
-      badge="<span class='badge-risk'>⚠ Risqué</span>";
-    }
-
-    html+=`
-    <div class="pred">
-    <b>Prédiction ${i}</b> ${badge}<br>
-    ⏱ Entrée : ${fm.toString().padStart(2,"0")}:${fs.toString().padStart(2,"0")}<br>
-    📈 Cote min estimée : <b>${cote.toFixed(2)}x</b><br>
-    🎯 Jackpot score : ${jackpotScore}/100
-    </div>`;
+    list += `
+      <div class="pred">
+        ⏱️ Entrée : <b>${pm.toString().padStart(2,"0")}:${ps.toString().padStart(2,"0")}</b><br>
+        🎯 Cote min : <span class="${level}">${minCote}x</span><br>
+        💥 Chakra Jackpot : ${jackpot}/7
+      </div>
+    `;
   }
 
-  document.getElementById("prediction").innerHTML=html;
-  document.getElementById("result").style.display="block";
+  document.getElementById("list").innerHTML=list;
+  document.getElementById("results").style.display="block";
 }
 
-/* =======================
-   APPRENTISSAGE
-   ======================= */
-function record(win){
-  if(lastS===null)return;
-  if(win){
-    data.heat[lastS].w++;
-    data.score+=2;
-  }else{
-    data.heat[lastS].l++;
-    data.score-=3;
-  }
-  data.score=Math.max(0,Math.min(100,data.score));
-  localStorage.setItem("aviatorAI",JSON.stringify(data));
-  document.getElementById("score").innerText=data.score+"%";
+/* ==== AUTO-APPRENTISSAGE SIMPLE ==== */
+function feedback(win){
+  AI.score += win ? 2 : -3;
+  AI.score = Math.max(0,Math.min(100,AI.score));
+  localStorage.setItem("aviatorAI",JSON.stringify(AI));
+  document.getElementById("score").innerText=AI.score+"%";
 }
 
-document.getElementById("score").innerText=data.score+"%";
+document.getElementById("score").innerText=AI.score+"%";
 </script>
 
 </body>
