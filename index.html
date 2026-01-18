@@ -1,77 +1,99 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anthonio AI - Photo Sync</title>
-    <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
-        #lock-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .main-container { display: none; padding: 15px; background: #1a1a1a; border-radius: 20px; border: 1px solid #f0b90b; max-width: 380px; margin: 20px auto; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #080808; color: #fff; font-size: 16px; }
-        button { width: 90%; padding: 15px; background: #f0b90b; color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .result-card { background: #000; padding: 20px; border-radius: 15px; margin: 15px 0; border-left: 5px solid #f02d7d; }
-        #target-id { font-size: 40px; color: #f02d7d; font-weight: bold; margin: 5px 0; }
-        .status { color: #3498db; font-weight: bold; text-transform: uppercase; font-size: 14px; }
-    </style>
+<meta charset="UTF-8">
+<title>AVIATOR IA AUTO-LEARNING</title>
+<style>
+body{background:#05070a;color:white;font-family:Arial;text-align:center}
+input,button{padding:10px;margin:5px;font-size:16px}
+#res{margin-top:15px}
+canvas{margin-top:10px;border:1px solid #333}
+.good{color:#00ff88}
+.bad{color:#ff4b2b}
+</style>
 </head>
 <body>
 
-    <div id="lock-screen">
-        <h2 style="color:#f0b90b">ANTHONIO AI</h2>
-        <input type="password" id="pass-input" placeholder="CODE D'ACCÈS">
-        <button onclick="access()">DÉVERROUILLER</button>
-    </div>
+<h2>AVIATOR IA AUTO-LEARNING</h2>
 
-    <div id="main-ui" class="main-container">
-        <h3 style="color:#f0b90b; margin-top:0;">ANALYSEUR DE CAPTURE</h3>
-        
-        <div class="result-card">
-            <div id="status-text" class="status">PRÊT</div>
-            <div id="target-id">#--</div>
-            <div id="prediction" style="color:#f0b90b; font-size: 20px; font-weight: bold;">x0.00</div>
-        </div>
+<input id="v" type="number" step="0.01" placeholder="Dernier crash">
+<input id="s" type="number" placeholder="Seconde">
+<br>
+<button onclick="predict()">PREDICT</button>
 
-        <p style="font-size: 11px; color: #888;">Regarde ta capture Bet261 :</p>
-        <input type="number" id="id-last" placeholder="2 derniers chiffres ID (ex: 36)">
-        <input type="number" id="cote-last" placeholder="Dernière grosse côte (ex: 21)">
-        
-        <button onclick="calculateMagic()">DÉTECTER LE PROCHAIN TOUR</button>
-    </div>
+<div id="res"></div>
 
-    <script>
-        // Déverrouillage immédiat
-        function access() {
-            if(document.getElementById('pass-input').value === 'Sahondra123#') {
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('main-ui').style.display = 'block';
-            } else {
-                alert("Code incorrect");
-            }
-        }
+<button onclick="record(true)">GAGNÉ ✅</button>
+<button onclick="record(false)">PERDU ❌</button>
 
-        // Calcul basé sur l'historique visuel
-        function calculateMagic() {
-            let lastId = parseInt(document.getElementById('id-last').value);
-            let lastCote = parseFloat(document.getElementById('cote-last').value);
+<h3>Score Global IA</h3>
+<div id="score">50%</div>
 
-            if(isNaN(lastId) || isNaN(lastCote)) {
-                alert("Remplis les deux cases");
-                return;
-            }
+<h3>Heatmap secondes</h3>
+<canvas id="heatmap" width="300" height="50"></canvas>
 
-            // Logique : Si la dernière côte était > 10, le cycle se répète après 9-11 tours
-            let gap = (lastCote > 15) ? 10 : 7;
-            let target = lastId + gap;
-            
-            if(target >= 100) target -= 100;
-            let finalId = (target < 10) ? "0" + target : target;
+<script>
+let wins=0,total=0;
+let iaScore=parseInt(localStorage.getItem("iaScore"))||50;
+let heat=JSON.parse(localStorage.getItem("heat"))||{};
+let lastS=null;
 
-            document.getElementById('target-id').innerText = "#" + finalId;
-            document.getElementById('status-text').innerText = "MISER DANS " + gap + " TOURS";
-            document.getElementById('prediction').innerText = "CIBLE : x" + (Math.random() * 10 + 20.50).toFixed(2);
-        }
-    </script>
+document.getElementById("score").innerText=iaScore+"%";
+
+function predict(){
+  const v=parseFloat(v=document.getElementById("v").value);
+  const s=parseInt(document.getElementById("s").value);
+  if(isNaN(v)||isNaN(s)) return alert("Erreur valeur");
+
+  lastS=s;
+  heat[s]=heat[s]||{w:0,l:0};
+
+  let bias=(heat[s].w-heat[s].l)*0.05;
+  let pred=(1.8+(s/60)+(v/10)+bias).toFixed(2);
+
+  document.getElementById("res").innerHTML=
+    "<h2>"+pred+"x</h2>"+
+    "<small>Seconde "+s+" | Bias IA "+bias.toFixed(2)+"</small>";
+}
+
+function record(win){
+  if(lastS===null)return;
+  total++;
+  win?wins++:0;
+
+  if(win){
+    iaScore+=2;
+    heat[lastS].w++;
+  }else{
+    iaScore-=3;
+    heat[lastS].l++;
+  }
+
+  iaScore=Math.max(0,Math.min(100,iaScore));
+
+  localStorage.setItem("iaScore",iaScore);
+  localStorage.setItem("heat",JSON.stringify(heat));
+
+  document.getElementById("score").innerText=iaScore+"%";
+  drawHeat();
+}
+
+function drawHeat(){
+  const c=document.getElementById("heatmap");
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,300,50);
+
+  for(let i=0;i<60;i++){
+    let d=heat[i]||{w:0,l:0};
+    let r=d.w-d.l;
+    ctx.fillStyle=r>0?
+      `rgba(0,255,0,${Math.min(r/5,1)})`:
+      `rgba(255,0,0,${Math.min(-r/5,1)})`;
+    ctx.fillRect(i*5,0,5,50);
+  }
+}
+drawHeat();
+</script>
 
 </body>
 </html>
