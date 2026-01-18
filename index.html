@@ -2,156 +2,208 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<title>AVIATOR IA SMART PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AVIATOR PRECISION ENGINE V11</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@600&display=swap" rel="stylesheet">
 
 <style>
-:root{
- --bg:radial-gradient(circle at top,#0b0f1a,#000);
- --card:linear-gradient(145deg,#0f1525,#060a14);
- --red:#ff3b3b; --gold:#f0b90b; --green:#00ff88; --txt:#eaeaff;
-}
 body{
- background:var(--bg); color:var(--txt);
- font-family:'Rajdhani',sans-serif;
- display:flex; justify-content:center; margin:0; padding:12px;
+  background:#0e1117;
+  color:#eaeaea;
+  font-family:system-ui, Arial;
+  margin:0;
+  padding:20px;
+  display:flex;
+  justify-content:center;
 }
-.container{max-width:450px;width:100%;display:none}
-.header,.card,.res-box{
- background:var(--card); border-radius:18px;
- border:1px solid rgba(255,255,255,.08);
- box-shadow:0 0 30px rgba(255,0,0,.15);
+.app{max-width:420px;width:100%}
+.card{
+  background:#161b22;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:15px;
+  box-shadow:0 0 0 1px #222;
 }
-.header{text-align:center;padding:18px;border-bottom:3px solid var(--red)}
-.clock{font-family:'Orbitron';font-size:26px;color:var(--red);text-shadow:0 0 25px var(--red)}
-.card{padding:20px;margin-top:15px}
-label{font-size:11px;color:#aaa}
+h2,h3{margin:0 0 10px;font-weight:600}
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
 input{
- width:100%;padding:14px;margin-top:6px;
- background:#000;border:1px solid #333;
- color:var(--green);border-radius:12px;
- font-family:'Orbitron';font-size:18px;text-align:center;
+  background:#0d1117;
+  color:white;
+  border:1px solid #30363d;
 }
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
-.btn{
- margin-top:15px;width:100%;padding:18px;
- border:none;border-radius:16px;
- background:linear-gradient(135deg,#ff2d2d,#ff0000);
- color:white;font-family:'Orbitron';
- box-shadow:0 0 30px rgba(255,0,0,.7);
-}
-.res-box{margin-top:20px;padding:20px;text-align:center;display:none}
-.target{font-family:'Orbitron';font-size:46px;color:var(--red)}
-.justif{font-size:12px;color:#aaa;margin-top:10px}
-#accuracy{font-family:'Orbitron';font-size:26px}
-#lock{
- position:fixed;inset:0;background:#000;
- display:flex;align-items:center;justify-content:center;z-index:99
-}
-.lock-card{
- background:var(--card);padding:40px;border-radius:25px;
- border:1px solid var(--gold);text-align:center
-}
+button{background:#238636;color:white;cursor:pointer}
+button.red{background:#da3633}
+.small{font-size:13px;color:#aaa}
+#prediction{font-size:36px;font-weight:bold}
+canvas{width:100%;border-radius:8px}
+.good{color:#3fb950}
+.bad{color:#f85149}
+.warn{color:#d29922}
 </style>
 </head>
 
 <body>
+<div class="app">
 
-<div id="lock">
- <div class="lock-card">
-  <h3 style="color:var(--gold);font-family:Orbitron">ACCESS AVIATOR</h3>
-  <input id="pass" type="password" placeholder="PASSWORD">
-  <button class="btn" style="background:var(--gold);color:black" onclick="unlock()">ENTRER</button>
- </div>
+<div class="card">
+  <h2>AVIATOR IA SMART PRO</h2>
+  <div class="small">Auto-learning • Heatmap • Graphique</div>
 </div>
 
-<div id="app" class="container">
+<div class="card">
+  <input id="v" type="number" step="0.01" placeholder="Dernier crash (ex: 1.85)">
+  <input id="s" type="number" placeholder="Seconde (0–59)">
+  <button onclick="predict()">Analyser</button>
+</div>
 
- <div class="header">
-  <div class="clock" id="clock">00:00:00</div>
-  <div style="font-size:10px">AVIATOR PRECISION ENGINE V11</div>
- </div>
+<div class="card" id="result" style="display:none">
+  <div id="prediction">--</div>
+  <div id="info" class="small"></div>
+</div>
 
- <div class="card">
-  <label>VALEUR DU DERNIER CRASH</label>
-  <input id="v" type="number" step="0.01" placeholder="1.00">
+<div class="card">
+  <button onclick="record(true)">GAGNÉ ✅</button>
+  <button class="red" onclick="record(false)">PERDU ❌</button>
+</div>
 
-  <div class="grid">
-   <div>
-    <label>MINUTE</label>
-    <input id="m" type="number" placeholder="00">
-   </div>
-   <div>
-    <label>SECONDE</label>
-    <input id="s" type="number" placeholder="00">
-   </div>
-  </div>
+<div class="card">
+  <h3>Score Global IA</h3>
+  <div id="score">50%</div>
+</div>
 
-  <button class="btn" onclick="predict()">CALCULER SIGNAL PRÉCIS</button>
- </div>
+<div class="card">
+  <h3>Heatmap des secondes</h3>
+  <canvas id="heatmap" width="300" height="50"></canvas>
+  <div class="small">Vert = fiable • Rouge = seconde dangereuse</div>
+</div>
 
- <div id="res" class="res-box">
-  <div class="target" id="cote">--.--x</div>
-  <div id="time"></div>
-  <div class="justif" id="justif"></div>
- </div>
-
- <div class="card" style="text-align:center;margin-top:20px">
-  <div style="font-size:11px;color:var(--gold)">PRÉCISION RÉELLE</div>
-  <div id="accuracy">0%</div>
- </div>
+<div class="card">
+  <h3>Évolution du score IA</h3>
+  <canvas id="graph" width="300" height="120"></canvas>
+</div>
 
 </div>
 
 <script>
-let wins=0,total=0;
+/* === DONNÉES IA === */
+let data = JSON.parse(localStorage.getItem("aviatorAI")) || {
+  heat:Array.from({length:60},()=>({w:0,l:0})),
+  score:50,
+  history:[50]
+};
+let lastS=null;
 
-setInterval(()=>{
- document.getElementById("clock").innerText=
- new Date().toLocaleTimeString("fr-FR");
-},1000);
-
-function unlock(){
- if(pass.value==="bandykely"){
-  lock.style.display="none";
-  app.style.display="block";
- }else alert("Code invalide");
-}
-
+/* === PREDICTION === */
 function predict(){
- let v=parseFloat(v.value),
-     m=parseInt(m.value),
-     s=parseInt(s.value);
- if(isNaN(v)||isNaN(m)||isNaN(s)) return alert("Remplis tout");
+  const v=parseFloat(v=document.getElementById("v").value);
+  const s=parseInt(document.getElementById("s").value);
 
- let prediction;
- if(s%2===0){
-  prediction=(2.1+(s/50)+(v/10)).toFixed(2);
-  justif.innerHTML="Phase IA positive détectée";
- }else{
-  prediction=(1.5+(s/60)).toFixed(2);
-  justif.innerHTML="Cycle de sécurité IA";
- }
+  if(isNaN(v)||isNaN(s)||s<0||s>59){
+    alert("Valeurs invalides");
+    return;
+  }
 
- let ns=(s+20+Math.floor(v))%60;
- let nm=(m+(s+20>59?1:0))%60;
+  lastS=s;
+  const h=data.heat[s];
+  const diff=h.w-h.l;
 
- cote.innerText=prediction+"x";
- time.innerText="PARIER À : "+nm.toString().padStart(2,"0")+":"+ns.toString().padStart(2,"0");
- res.style.display="block";
+  document.getElementById("result").style.display="block";
 
- setTimeout(()=>{
-  let ok=confirm("Le signal a-t-il GAGNÉ ?");
-  record(ok);
- },500);
+  // 🔴 SECONDE ROUGE
+  if(h.l>=h.w+2){
+    document.getElementById("prediction").innerHTML=
+      "<span class='bad'>SECONDE DANGEREUSE</span>";
+    document.getElementById("info").innerText=
+      "Historique négatif — éviter cette seconde";
+    return;
+  }
+
+  let bias=diff*0.05;
+  let pred=(1.5+v/10+s/60+bias).toFixed(2);
+
+  document.getElementById("prediction").innerHTML=pred+"x";
+  document.getElementById("info").innerText=
+    diff>1?"Seconde favorable":"Seconde neutre";
 }
 
+/* === APPRENTISSAGE === */
 function record(win){
- total++; if(win) wins++;
- accuracy.innerText=((wins/total)*100).toFixed(1)+"%";
+  if(lastS===null)return;
+
+  if(win){
+    data.heat[lastS].w++;
+    data.score+=2;
+  }else{
+    data.heat[lastS].l++;
+    data.score-=3;
+  }
+
+  data.score=Math.max(0,Math.min(100,data.score));
+  data.history.push(data.score);
+
+  localStorage.setItem("aviatorAI",JSON.stringify(data));
+
+  document.getElementById("score").innerText=data.score+"%";
+  drawHeat();
+  drawGraph();
 }
+
+/* === HEATMAP === */
+function drawHeat(){
+  const c=document.getElementById("heatmap");
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  for(let i=0;i<60;i++){
+    let d=data.heat[i];
+    let diff=d.w-d.l;
+    let a=Math.min(Math.abs(diff)/5,1);
+
+    ctx.fillStyle=
+      diff>1?`rgba(63,185,80,${a})`:
+      diff<-1?`rgba(248,81,73,${a})`:
+      `rgba(210,153,34,0.4)`;
+
+    ctx.fillRect(i*5,0,5,50);
+  }
+}
+
+/* === GRAPHIQUE SCORE === */
+function drawGraph(){
+  const c=document.getElementById("graph");
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const h=data.history.slice(-30);
+  if(h.length<2)return;
+
+  const max=Math.max(...h);
+  const min=Math.min(...h);
+  const r=Math.max(1,max-min);
+
+  ctx.beginPath();
+  ctx.strokeStyle="#3fb950";
+  ctx.lineWidth=2;
+
+  h.forEach((v,i)=>{
+    const x=i*(c.width/(h.length-1));
+    const y=c.height-((v-min)/r)*c.height;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+
+  ctx.stroke();
+}
+
+/* INIT */
+document.getElementById("score").innerText=data.score+"%";
+drawHeat();
+drawGraph();
 </script>
 
 </body>
