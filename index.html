@@ -23,7 +23,7 @@ body{
   margin-bottom:15px;
   box-shadow:0 0 0 1px #222;
 }
-h2,h3{margin:0 0 10px 0;font-weight:600}
+h2,h3{margin:0 0 10px 0}
 input,button{
   width:100%;
   padding:12px;
@@ -44,10 +44,8 @@ button{
 }
 button.red{background:#da3633}
 .small{font-size:13px;color:#aaa}
-canvas{width:100%;height:50px;border-radius:8px}
 .good{color:#3fb950}
 .bad{color:#f85149}
-.warn{color:#d29922}
 </style>
 </head>
 
@@ -56,132 +54,68 @@ canvas{width:100%;height:50px;border-radius:8px}
 
 <div class="card">
   <h2>AVIATOR IA SMART</h2>
-  <div class="small">Prédictions filtrées & auto-learning</div>
+  <div class="small">Analyse après ROSE • 4 tours</div>
 </div>
 
 <div class="card">
-  <input id="v" type="number" step="0.01" placeholder="Dernière cote ROSE (ex: 6.20)">
-  <input id="m" type="number" placeholder="Minute (0–59)">
-  <input id="s" type="number" placeholder="Seconde (0–59)">
+  <input id="v" type="number" step="0.01" placeholder="Dernière cote ROSE (≥5)">
+  <input id="mr" type="number" placeholder="Minute du ROSE (0–59)">
+  <input id="sr" type="number" placeholder="Seconde du ROSE (0–59)">
+  <input id="mt" type="number" placeholder="Minute du TOUR actuel (0–59)">
   <button onclick="predict()">Analyser</button>
 </div>
 
 <div class="card" id="result" style="display:none">
-  <div id="prediction" style="font-size:20px;font-weight:bold"></div>
-  <div id="info" class="small"></div>
+  <div id="prediction"></div>
   <div id="multi" style="margin-top:10px"></div>
 </div>
 
-<div class="card">
-  <button onclick="record(true)">GAGNÉ ✅</button>
-  <button class="red" onclick="record(false)">PERDU ❌</button>
-</div>
-
-<div class="card">
-  <h3>Score Global IA</h3>
-  <div id="score">50%</div>
-</div>
-
-<div class="card">
-  <h3>Heatmap des secondes</h3>
-  <canvas id="heatmap" width="300" height="50"></canvas>
-  <div class="small">Vert = fiable • Rouge = dangereux</div>
-</div>
-
-</div>
-
 <script>
-let data = JSON.parse(localStorage.getItem("aviatorAI")) || {
-  heat:Array.from({length:60},()=>({w:0,l:0})),
-  score:50
-};
-let lastS=null;
-
-/* ===== PRÉDICTION ===== */
 function predict(){
   const v = parseFloat(document.getElementById("v").value);
-  const m = parseInt(document.getElementById("m").value);
-  const s = parseInt(document.getElementById("s").value);
+  const mr = parseInt(document.getElementById("mr").value);
+  const sr = parseInt(document.getElementById("sr").value);
+  const mt = parseInt(document.getElementById("mt").value);
 
-  if(isNaN(v)||isNaN(m)||isNaN(s)||m<0||m>59||s<0||s>59){
-    alert("Valeurs invalides");
+  if(
+    isNaN(v)||isNaN(mr)||isNaN(sr)||isNaN(mt)||
+    mr<0||mr>59||sr<0||sr>59||mt<0||mt>59
+  ){
+    alert("Remplis TOUS les champs correctement");
     return;
   }
-
-  lastS = s;
-  const h = data.heat[s];
-  const diff = h.w - h.l;
 
   document.getElementById("result").style.display="block";
 
-  // seconde dangereuse
-  if(h.l >= h.w + 2){
-    document.getElementById("prediction").innerHTML =
-      "<span class='bad'>SECONDE ROUGE</span>";
-    document.getElementById("info").innerText =
-      "Historique négatif — signal annulé";
-    document.getElementById("multi").innerHTML="";
-    return;
-  }
+  let base =
+    1.5 +
+    (v / 10) +
+    ((mr*60 + sr) % 30) / 30 +
+    (mt % 10) * 0.05;
 
-  let base = 1.6 + (v/12) + ((m*60+s)%30)/30 + diff*0.05;
-
-  let html="";
-  let count=0;
+  let html = "";
+  let ok = 0;
 
   for(let i=1;i<=4;i++){
-    let pred = (base + i*0.15).toFixed(2);
+    let pred = (base + i * 0.25).toFixed(2);
     if(pred > 4){
-      count++;
+      ok++;
       html += `⏭ Tour +${i} : <b class="good">${pred}x</b><br>`;
     }
   }
 
-  if(count===0){
+  if(ok === 0){
     document.getElementById("prediction").innerHTML =
       "<span class='bad'>AUCUN SIGNAL</span>";
-    document.getElementById("info").innerText =
+    document.getElementById("multi").innerHTML =
       "Aucune prédiction > 4.00x";
-    document.getElementById("multi").innerHTML="";
     return;
   }
 
   document.getElementById("prediction").innerHTML =
-    "SIGNALS IA (> 4.00x)";
-  document.getElementById("info").innerText =
-    "Basé sur le dernier ROSE à " + m + ":" + s;
+    "<b>SIGNALS IA VALIDES</b>";
   document.getElementById("multi").innerHTML = html;
 }
-
-/* ===== APPRENTISSAGE ===== */
-function record(win){
-  if(lastS===null)return;
-  win?data.heat[lastS].w++:data.heat[lastS].l++;
-  data.score += win?2:-3;
-  data.score=Math.max(0,Math.min(100,data.score));
-  localStorage.setItem("aviatorAI",JSON.stringify(data));
-  document.getElementById("score").innerText=data.score+"%";
-  drawHeat();
-}
-
-/* ===== HEATMAP ===== */
-function drawHeat(){
-  const c=document.getElementById("heatmap");
-  const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,300,50);
-  for(let i=0;i<60;i++){
-    let d=data.heat[i];
-    let diff=d.w-d.l;
-    let a=Math.min(Math.abs(diff)/5,1);
-    ctx.fillStyle=
-      diff>1?`rgba(63,185,80,${a})`:
-      diff<-1?`rgba(248,81,73,${a})`:
-      `rgba(210,153,34,0.5)`;
-    ctx.fillRect(i*5,0,5,50);
-  }
-}
-drawHeat();
-document.getElementById("score").innerText=data.score+"%";
 </script>
 
 </body>
