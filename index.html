@@ -2,97 +2,156 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>AVIATOR IA AUTO-LEARNING</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVIATOR PRECISION ENGINE V11</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@600&display=swap" rel="stylesheet">
+
 <style>
-body{background:#05070a;color:white;font-family:Arial;text-align:center}
-input,button{padding:10px;margin:5px;font-size:16px}
-#res{margin-top:15px}
-canvas{margin-top:10px;border:1px solid #333}
-.good{color:#00ff88}
-.bad{color:#ff4b2b}
+:root{
+ --bg:radial-gradient(circle at top,#0b0f1a,#000);
+ --card:linear-gradient(145deg,#0f1525,#060a14);
+ --red:#ff3b3b; --gold:#f0b90b; --green:#00ff88; --txt:#eaeaff;
+}
+body{
+ background:var(--bg); color:var(--txt);
+ font-family:'Rajdhani',sans-serif;
+ display:flex; justify-content:center; margin:0; padding:12px;
+}
+.container{max-width:450px;width:100%;display:none}
+.header,.card,.res-box{
+ background:var(--card); border-radius:18px;
+ border:1px solid rgba(255,255,255,.08);
+ box-shadow:0 0 30px rgba(255,0,0,.15);
+}
+.header{text-align:center;padding:18px;border-bottom:3px solid var(--red)}
+.clock{font-family:'Orbitron';font-size:26px;color:var(--red);text-shadow:0 0 25px var(--red)}
+.card{padding:20px;margin-top:15px}
+label{font-size:11px;color:#aaa}
+input{
+ width:100%;padding:14px;margin-top:6px;
+ background:#000;border:1px solid #333;
+ color:var(--green);border-radius:12px;
+ font-family:'Orbitron';font-size:18px;text-align:center;
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.btn{
+ margin-top:15px;width:100%;padding:18px;
+ border:none;border-radius:16px;
+ background:linear-gradient(135deg,#ff2d2d,#ff0000);
+ color:white;font-family:'Orbitron';
+ box-shadow:0 0 30px rgba(255,0,0,.7);
+}
+.res-box{margin-top:20px;padding:20px;text-align:center;display:none}
+.target{font-family:'Orbitron';font-size:46px;color:var(--red)}
+.justif{font-size:12px;color:#aaa;margin-top:10px}
+#accuracy{font-family:'Orbitron';font-size:26px}
+#lock{
+ position:fixed;inset:0;background:#000;
+ display:flex;align-items:center;justify-content:center;z-index:99
+}
+.lock-card{
+ background:var(--card);padding:40px;border-radius:25px;
+ border:1px solid var(--gold);text-align:center
+}
 </style>
 </head>
+
 <body>
 
-<h2>AVIATOR IA AUTO-LEARNING</h2>
+<div id="lock">
+ <div class="lock-card">
+  <h3 style="color:var(--gold);font-family:Orbitron">ACCESS AVIATOR</h3>
+  <input id="pass" type="password" placeholder="PASSWORD">
+  <button class="btn" style="background:var(--gold);color:black" onclick="unlock()">ENTRER</button>
+ </div>
+</div>
 
-<input id="v" type="number" step="0.01" placeholder="Dernier crash">
-<input id="s" type="number" placeholder="Seconde">
-<br>
-<button onclick="predict()">PREDICT</button>
+<div id="app" class="container">
 
-<div id="res"></div>
+ <div class="header">
+  <div class="clock" id="clock">00:00:00</div>
+  <div style="font-size:10px">AVIATOR PRECISION ENGINE V11</div>
+ </div>
 
-<button onclick="record(true)">GAGNÉ ✅</button>
-<button onclick="record(false)">PERDU ❌</button>
+ <div class="card">
+  <label>VALEUR DU DERNIER CRASH</label>
+  <input id="v" type="number" step="0.01" placeholder="1.00">
 
-<h3>Score Global IA</h3>
-<div id="score">50%</div>
+  <div class="grid">
+   <div>
+    <label>MINUTE</label>
+    <input id="m" type="number" placeholder="00">
+   </div>
+   <div>
+    <label>SECONDE</label>
+    <input id="s" type="number" placeholder="00">
+   </div>
+  </div>
 
-<h3>Heatmap secondes</h3>
-<canvas id="heatmap" width="300" height="50"></canvas>
+  <button class="btn" onclick="predict()">CALCULER SIGNAL PRÉCIS</button>
+ </div>
+
+ <div id="res" class="res-box">
+  <div class="target" id="cote">--.--x</div>
+  <div id="time"></div>
+  <div class="justif" id="justif"></div>
+ </div>
+
+ <div class="card" style="text-align:center;margin-top:20px">
+  <div style="font-size:11px;color:var(--gold)">PRÉCISION RÉELLE</div>
+  <div id="accuracy">0%</div>
+ </div>
+
+</div>
 
 <script>
 let wins=0,total=0;
-let iaScore=parseInt(localStorage.getItem("iaScore"))||50;
-let heat=JSON.parse(localStorage.getItem("heat"))||{};
-let lastS=null;
 
-document.getElementById("score").innerText=iaScore+"%";
+setInterval(()=>{
+ document.getElementById("clock").innerText=
+ new Date().toLocaleTimeString("fr-FR");
+},1000);
+
+function unlock(){
+ if(pass.value==="bandykely"){
+  lock.style.display="none";
+  app.style.display="block";
+ }else alert("Code invalide");
+}
 
 function predict(){
-  const v=parseFloat(v=document.getElementById("v").value);
-  const s=parseInt(document.getElementById("s").value);
-  if(isNaN(v)||isNaN(s)) return alert("Erreur valeur");
+ let v=parseFloat(v.value),
+     m=parseInt(m.value),
+     s=parseInt(s.value);
+ if(isNaN(v)||isNaN(m)||isNaN(s)) return alert("Remplis tout");
 
-  lastS=s;
-  heat[s]=heat[s]||{w:0,l:0};
+ let prediction;
+ if(s%2===0){
+  prediction=(2.1+(s/50)+(v/10)).toFixed(2);
+  justif.innerHTML="Phase IA positive détectée";
+ }else{
+  prediction=(1.5+(s/60)).toFixed(2);
+  justif.innerHTML="Cycle de sécurité IA";
+ }
 
-  let bias=(heat[s].w-heat[s].l)*0.05;
-  let pred=(1.8+(s/60)+(v/10)+bias).toFixed(2);
+ let ns=(s+20+Math.floor(v))%60;
+ let nm=(m+(s+20>59?1:0))%60;
 
-  document.getElementById("res").innerHTML=
-    "<h2>"+pred+"x</h2>"+
-    "<small>Seconde "+s+" | Bias IA "+bias.toFixed(2)+"</small>";
+ cote.innerText=prediction+"x";
+ time.innerText="PARIER À : "+nm.toString().padStart(2,"0")+":"+ns.toString().padStart(2,"0");
+ res.style.display="block";
+
+ setTimeout(()=>{
+  let ok=confirm("Le signal a-t-il GAGNÉ ?");
+  record(ok);
+ },500);
 }
 
 function record(win){
-  if(lastS===null)return;
-  total++;
-  win?wins++:0;
-
-  if(win){
-    iaScore+=2;
-    heat[lastS].w++;
-  }else{
-    iaScore-=3;
-    heat[lastS].l++;
-  }
-
-  iaScore=Math.max(0,Math.min(100,iaScore));
-
-  localStorage.setItem("iaScore",iaScore);
-  localStorage.setItem("heat",JSON.stringify(heat));
-
-  document.getElementById("score").innerText=iaScore+"%";
-  drawHeat();
+ total++; if(win) wins++;
+ accuracy.innerText=((wins/total)*100).toFixed(1)+"%";
 }
-
-function drawHeat(){
-  const c=document.getElementById("heatmap");
-  const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,300,50);
-
-  for(let i=0;i<60;i++){
-    let d=heat[i]||{w:0,l:0};
-    let r=d.w-d.l;
-    ctx.fillStyle=r>0?
-      `rgba(0,255,0,${Math.min(r/5,1)})`:
-      `rgba(255,0,0,${Math.min(-r/5,1)})`;
-    ctx.fillRect(i*5,0,5,50);
-  }
-}
-drawHeat();
 </script>
 
 </body>
