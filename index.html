@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>AVIATOR IA SMART PRO</title>
+<title>AVIATOR IA SMART</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -18,12 +18,12 @@ body{
 .app{max-width:420px;width:100%}
 .card{
   background:#161b22;
-  border-radius:16px;
+  border-radius:14px;
   padding:16px;
   margin-bottom:15px;
   box-shadow:0 0 0 1px #222;
 }
-h2,h3{margin:0 0 10px;font-weight:600}
+h2,h3{margin:0 0 10px 0;font-weight:600}
 input,button{
   width:100%;
   padding:12px;
@@ -37,11 +37,14 @@ input{
   color:white;
   border:1px solid #30363d;
 }
-button{background:#238636;color:white;cursor:pointer}
+button{
+  background:#238636;
+  color:white;
+  cursor:pointer;
+}
 button.red{background:#da3633}
 .small{font-size:13px;color:#aaa}
-#prediction{font-size:36px;font-weight:bold}
-canvas{width:100%;border-radius:8px}
+canvas{width:100%;height:50px;border-radius:8px}
 .good{color:#3fb950}
 .bad{color:#f85149}
 .warn{color:#d29922}
@@ -52,19 +55,21 @@ canvas{width:100%;border-radius:8px}
 <div class="app">
 
 <div class="card">
-  <h2>AVIATOR IA SMART PRO</h2>
-  <div class="small">Auto-learning • Heatmap • Graphique</div>
+  <h2>AVIATOR IA SMART</h2>
+  <div class="small">Prédictions filtrées & auto-learning</div>
 </div>
 
 <div class="card">
-  <input id="v" type="number" step="0.01" placeholder="Dernier crash (ex: 1.85)">
+  <input id="v" type="number" step="0.01" placeholder="Dernière cote ROSE (ex: 6.20)">
+  <input id="m" type="number" placeholder="Minute (0–59)">
   <input id="s" type="number" placeholder="Seconde (0–59)">
   <button onclick="predict()">Analyser</button>
 </div>
 
 <div class="card" id="result" style="display:none">
-  <div id="prediction">--</div>
+  <div id="prediction" style="font-size:20px;font-weight:bold"></div>
   <div id="info" class="small"></div>
+  <div id="multi" style="margin-top:10px"></div>
 </div>
 
 <div class="card">
@@ -80,130 +85,103 @@ canvas{width:100%;border-radius:8px}
 <div class="card">
   <h3>Heatmap des secondes</h3>
   <canvas id="heatmap" width="300" height="50"></canvas>
-  <div class="small">Vert = fiable • Rouge = seconde dangereuse</div>
-</div>
-
-<div class="card">
-  <h3>Évolution du score IA</h3>
-  <canvas id="graph" width="300" height="120"></canvas>
+  <div class="small">Vert = fiable • Rouge = dangereux</div>
 </div>
 
 </div>
 
 <script>
-/* === DONNÉES IA === */
 let data = JSON.parse(localStorage.getItem("aviatorAI")) || {
   heat:Array.from({length:60},()=>({w:0,l:0})),
-  score:50,
-  history:[50]
+  score:50
 };
 let lastS=null;
 
-/* === PREDICTION === */
+/* ===== PRÉDICTION ===== */
 function predict(){
-  const v=parseFloat(v=document.getElementById("v").value);
-  const s=parseInt(document.getElementById("s").value);
+  const v = parseFloat(document.getElementById("v").value);
+  const m = parseInt(document.getElementById("m").value);
+  const s = parseInt(document.getElementById("s").value);
 
-  if(isNaN(v)||isNaN(s)||s<0||s>59){
+  if(isNaN(v)||isNaN(m)||isNaN(s)||m<0||m>59||s<0||s>59){
     alert("Valeurs invalides");
     return;
   }
 
-  lastS=s;
-  const h=data.heat[s];
-  const diff=h.w-h.l;
+  lastS = s;
+  const h = data.heat[s];
+  const diff = h.w - h.l;
 
   document.getElementById("result").style.display="block";
 
-  // 🔴 SECONDE ROUGE
-  if(h.l>=h.w+2){
-    document.getElementById("prediction").innerHTML=
-      "<span class='bad'>SECONDE DANGEREUSE</span>";
-    document.getElementById("info").innerText=
-      "Historique négatif — éviter cette seconde";
+  // seconde dangereuse
+  if(h.l >= h.w + 2){
+    document.getElementById("prediction").innerHTML =
+      "<span class='bad'>SECONDE ROUGE</span>";
+    document.getElementById("info").innerText =
+      "Historique négatif — signal annulé";
+    document.getElementById("multi").innerHTML="";
     return;
   }
 
-  let bias=diff*0.05;
-  let pred=(1.5+v/10+s/60+bias).toFixed(2);
+  let base = 1.6 + (v/12) + ((m*60+s)%30)/30 + diff*0.05;
 
-  document.getElementById("prediction").innerHTML=pred+"x";
-  document.getElementById("info").innerText=
-    diff>1?"Seconde favorable":"Seconde neutre";
-}
+  let html="";
+  let count=0;
 
-/* === APPRENTISSAGE === */
-function record(win){
-  if(lastS===null)return;
-
-  if(win){
-    data.heat[lastS].w++;
-    data.score+=2;
-  }else{
-    data.heat[lastS].l++;
-    data.score-=3;
+  for(let i=1;i<=4;i++){
+    let pred = (base + i*0.15).toFixed(2);
+    if(pred > 4){
+      count++;
+      html += `⏭ Tour +${i} : <b class="good">${pred}x</b><br>`;
+    }
   }
 
-  data.score=Math.max(0,Math.min(100,data.score));
-  data.history.push(data.score);
+  if(count===0){
+    document.getElementById("prediction").innerHTML =
+      "<span class='bad'>AUCUN SIGNAL</span>";
+    document.getElementById("info").innerText =
+      "Aucune prédiction > 4.00x";
+    document.getElementById("multi").innerHTML="";
+    return;
+  }
 
-  localStorage.setItem("aviatorAI",JSON.stringify(data));
-
-  document.getElementById("score").innerText=data.score+"%";
-  drawHeat();
-  drawGraph();
+  document.getElementById("prediction").innerHTML =
+    "SIGNALS IA (> 4.00x)";
+  document.getElementById("info").innerText =
+    "Basé sur le dernier ROSE à " + m + ":" + s;
+  document.getElementById("multi").innerHTML = html;
 }
 
-/* === HEATMAP === */
+/* ===== APPRENTISSAGE ===== */
+function record(win){
+  if(lastS===null)return;
+  win?data.heat[lastS].w++:data.heat[lastS].l++;
+  data.score += win?2:-3;
+  data.score=Math.max(0,Math.min(100,data.score));
+  localStorage.setItem("aviatorAI",JSON.stringify(data));
+  document.getElementById("score").innerText=data.score+"%";
+  drawHeat();
+}
+
+/* ===== HEATMAP ===== */
 function drawHeat(){
   const c=document.getElementById("heatmap");
   const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-
+  ctx.clearRect(0,0,300,50);
   for(let i=0;i<60;i++){
     let d=data.heat[i];
     let diff=d.w-d.l;
     let a=Math.min(Math.abs(diff)/5,1);
-
     ctx.fillStyle=
       diff>1?`rgba(63,185,80,${a})`:
       diff<-1?`rgba(248,81,73,${a})`:
-      `rgba(210,153,34,0.4)`;
-
+      `rgba(210,153,34,0.5)`;
     ctx.fillRect(i*5,0,5,50);
   }
 }
-
-/* === GRAPHIQUE SCORE === */
-function drawGraph(){
-  const c=document.getElementById("graph");
-  const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-
-  const h=data.history.slice(-30);
-  if(h.length<2)return;
-
-  const max=Math.max(...h);
-  const min=Math.min(...h);
-  const r=Math.max(1,max-min);
-
-  ctx.beginPath();
-  ctx.strokeStyle="#3fb950";
-  ctx.lineWidth=2;
-
-  h.forEach((v,i)=>{
-    const x=i*(c.width/(h.length-1));
-    const y=c.height-((v-min)/r)*c.height;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-
-  ctx.stroke();
-}
-
-/* INIT */
-document.getElementById("score").innerText=data.score+"%";
 drawHeat();
-drawGraph();
+document.getElementById("score").innerText=data.score+"%";
 </script>
 
 </body>
