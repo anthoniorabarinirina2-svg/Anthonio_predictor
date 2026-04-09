@@ -1,161 +1,247 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>AVIATOR IA – Naruto Mode</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation VIP - Contrôle Total</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #fff; min-height: 100vh; }
 
-<style>
-body{
-  margin:0;
-  min-height:100vh;
-  background:
-    linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),
-    url("https://wallpapercave.com/wp/wp9414302.jpg");
-  background-size:cover;
-  background-position:center;
-  color:#eaeaea;
-  font-family:Arial,system-ui;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  padding:20px;
-}
+        /* --- SÉCURITÉ --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+        }
 
-.app{
-  width:100%;
-  max-width:420px;
-}
+        .plane-anim {
+            width: 70px; fill: #ff0000; filter: drop-shadow(0 0 10px red);
+            animation: fly 3s infinite ease-in-out; margin-bottom: 20px;
+        }
+        @keyframes fly { 0%, 100% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(-15px) rotate(-5deg); } }
 
-.card{
-  background:rgba(10,15,30,0.9);
-  border:1px solid #1e293b;
-  border-radius:12px;
-  padding:16px;
-  margin-bottom:14px;
-}
+        input {
+            width: 100%; max-width: 300px; padding: 15px; background: #111;
+            border: 1px solid #ff0000; color: #00ff00; border-radius: 10px;
+            text-align: center; font-size: 1rem; margin-bottom: 15px; outline: none;
+        }
 
-h2,h3{
-  margin:0 0 10px 0;
-  text-align:center;
-}
+        .btn-red {
+            width: 100%; max-width: 300px; padding: 15px; background: #ff0000;
+            color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
 
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:8px;
-  font-size:15px;
-  border:none;
-}
+        /* --- INTERFACE --- */
+        .container { padding: 10px; max-width: 500px; margin: 0 auto; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #111; padding: 5px; border-radius: 10px; }
+        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 8px; font-size: 10px; cursor: pointer; color: #666; }
+        .tab.active { background: #ff0000; color: #fff; font-weight: bold; }
 
-input{
-  background:#020617;
-  color:white;
-  border:1px solid #334155;
-}
+        .panel { display: none; background: #0a0a0a; padding: 15px; border-radius: 15px; border: 1px solid #222; }
+        .panel.active { display: block; }
 
-button{
-  background:linear-gradient(90deg,#38bdf8,#f97316);
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-}
+        /* GESTION MEMBRES */
+        .member-list { margin-top: 15px; }
+        .member-item { 
+            background: #111; padding: 10px; border-radius: 8px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #ff0000;
+        }
+        .member-info { font-size: 12px; }
+        .status-on { color: #00ff00; font-size: 9px; }
+        .status-off { color: #666; font-size: 9px; }
+        .btn-expulser { background: #330000; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; }
 
-button:hover{
-  opacity:0.9;
-}
-
-.pred{
-  background:#020617;
-  border:1px solid #334155;
-  border-radius:8px;
-  padding:10px;
-  margin-top:8px;
-}
-
-.good{color:#22c55e}
-.warn{color:#facc15}
-.bad{color:#ef4444}
-.small{font-size:13px;color:#9ca3af;text-align:center}
-</style>
+        /* STRATÉGIE */
+        .dot { width: 40px; height: 40px; background: #000; border: 2px solid #ff0000; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .res-box { padding: 12px; border-radius: 10px; text-align: center; border-left: 4px solid; background: #050505; }
+        .rose { border-color: #ff0055; } .blue { border-color: #0088ff; }
+        .time { display: block; font-size: 1rem; color: #00ff00; font-weight: bold; }
+    </style>
 </head>
-
 <body>
-<div class="app">
 
-<div class="card">
-  <h2>AVIATOR IA</h2>
-  <div class="small">Naruto × Boruto • Mode Stratégie</div>
-</div>
+    <div id="auth-screen">
+        <svg class="plane-anim" viewBox="0 0 24 24"><path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/></svg>
+        <h3 style="margin-bottom:20px; letter-spacing:2px;">ACCÈS SÉCURISÉ</h3>
+        <input type="text" id="code-in" placeholder="CODE MEMBRE">
+        <button class="btn-red" onclick="login()">ACTIVER L'APPAREIL</button>
+        <p id="err" style="color:red; font-size:11px; margin-top:10px; display:none;"></p>
+    </div>
 
-<div class="card">
-  <input id="lastCote" type="number" step="0.01" placeholder="Dernier ROSE (≥ 4.00)">
-  <input id="hour" type="number" placeholder="Heure (0–23)">
-  <input id="minute" type="number" placeholder="Minute (0–59)">
-  <input id="second" type="number" placeholder="Seconde (0–59)">
-  <button id="analyzeBtn">ANALYSER</button>
-</div>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="tab('col', this)">COULEURS</div>
+            <div class="tab" onclick="tab('ct', this)">COTES</div>
+            <div id="tab-admin-gen" class="tab" onclick="tab('ad', this)" style="display:none; color: #ff0000;">ADMIN</div>
+            <div id="tab-admin-mem" class="tab" onclick="tab('mem', this)" style="display:none; color: #ff0000;">MEMBRES</div>
+        </div>
 
-<div class="card" id="resultBox" style="display:none">
-  <h3>4 Prédictions IA</h3>
-  <div id="predictions"></div>
-</div>
+        <div id="p-col" class="panel active">
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <button class="btn-red" style="background:#222; flex:1;" onclick="add('💙')">💙</button>
+                <button class="btn-red" style="background:#222; flex:1;" onclick="add('💜')">💜</button>
+                <button class="btn-red" style="background:#222; flex:1;" onclick="add('🌹')">🌹</button>
+            </div>
+            <div style="display:flex; gap:5px; justify-content:center; margin-bottom:15px;" id="v-seq">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+            <input type="time" id="t-col" step="1" onchange="calcCol()">
+            <div id="r-col" class="res-grid"></div>
+        </div>
 
-<div class="card">
-  <h3>Score IA</h3>
-  <div id="score">50%</div>
-</div>
+        <div id="p-ct" class="panel">
+            <input type="number" id="v-ct" placeholder="VALEUR COTE" step="0.01">
+            <input type="time" id="t-ct" step="1" onchange="calcCt()">
+            <div id="r-ct" class="res-grid"></div>
+        </div>
 
-</div>
+        <div id="p-ad" class="panel">
+            <div style="text-align:center;">
+                <p style="font-size:10px; color:#666;">GÉNÉRATEUR DE CLÉS</p>
+                <div id="new-code-display" style="font-size:1.5rem; color:red; margin:15px 0;">----</div>
+                <button class="btn-red" onclick="generateCode()">CRÉER CODE UNIQUE</button>
+            </div>
+        </div>
+
+        <div id="p-mem" class="panel">
+            <p style="font-size:10px; color:#666; margin-bottom:10px;">LISTE DES APPAREILS LIÉS</p>
+            <div id="member-list" class="member-list">
+                </div>
+        </div>
+    </div>
 
 <script>
-/* ===== MÉMOIRE IA ===== */
-let IA = JSON.parse(localStorage.getItem("aviatorIA")) || {
-  score:50
-};
+    const getDeviceId = () => navigator.userAgent + screen.width + screen.height;
+    let db = JSON.parse(localStorage.getItem("aviator_db")) || {};
 
-document.getElementById("score").innerText = IA.score + "%";
+    function login() {
+        const input = document.getElementById("code-in").value.trim().toUpperCase();
+        const err = document.getElementById("err");
+        const device = getDeviceId();
 
-/* ===== ANALYSE ===== */
-document.getElementById("analyzeBtn").addEventListener("click", analyze);
+        if (input === "091110") {
+            document.getElementById("tab-admin-gen").style.display = "block";
+            document.getElementById("tab-admin-mem").style.display = "block";
+            document.getElementById("auth-screen").style.display = "none";
+            updateMemberList();
+            return;
+        }
 
-function analyze(){
-  const v = parseFloat(document.getElementById("lastCote").value);
-  const h = parseInt(document.getElementById("hour").value);
-  const m = parseInt(document.getElementById("minute").value);
-  const s = parseInt(document.getElementById("second").value);
+        if (db.hasOwnProperty(input)) {
+            if (db[input] === null || db[input] === device) {
+                db[input] = device;
+                localStorage.setItem("aviator_db", JSON.stringify(db));
+                localStorage.setItem("my_active_session", input);
+                document.getElementById("auth-screen").style.display = "none";
+            } else {
+                err.style.display = "block";
+                err.innerText = "ACCÈS BLOQUÉ : DÉJÀ LIÉ À UN AUTRE TÉLÉPHONE.";
+            }
+        } else {
+            err.style.display = "block";
+            err.innerText = "CODE INCONNU.";
+        }
+    }
 
-  if([v,h,m,s].some(x => isNaN(x))){
-    alert("Remplis tous les champs");
-    return;
-  }
+    window.onload = () => {
+        const session = localStorage.getItem("my_active_session");
+        if (session && db[session] === getDeviceId()) {
+            document.getElementById("auth-screen").style.display = "none";
+        }
+    };
 
-  let output = "";
-  let base = (m * 0.5 + s * 0.3 + h * 0.2) % 10;
+    function generateCode() {
+        const code = "AV-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        db[code] = null;
+        localStorage.setItem("aviator_db", JSON.stringify(db));
+        document.getElementById("new-code-display").innerText = code;
+        updateMemberList();
+    }
 
-  for(let i=1;i<=4;i++){
-    let pm = (m + i*2 + Math.floor(base)) % 60;
-    let ps = (s + i*11) % 60;
+    function updateMemberList() {
+        const listDiv = document.getElementById("member-list");
+        listDiv.innerHTML = "";
+        for (let code in db) {
+            const isLinked = db[code] !== null;
+            listDiv.innerHTML += `
+                <div class="member-item">
+                    <div class="member-info">
+                        <b>${code}</b><br>
+                        <span class="${isLinked ? 'status-on' : 'status-off'}">
+                            ${isLinked ? '● Connecté' : '○ Libre'}
+                        </span>
+                    </div>
+                    <button class="btn-expulser" onclick="expulser('${code}')">EXPULSER</button>
+                </div>
+            `;
+        }
+    }
 
-    let jackpot = (h + pm + ps) % 8;
-    let cote = (4 + base/10 + jackpot*0.25).toFixed(2);
+    function expulser(code) {
+        if(confirm("Voulez-vous vraiment expulser ce membre ?")) {
+            delete db[code];
+            localStorage.setItem("aviator_db", JSON.stringify(db));
+            updateMemberList();
+        }
+    }
 
-    let cls = cote >= 6 ? "good" : cote >= 5 ? "warn" : "bad";
+    // --- STRATÉGIES ---
+    let seq = [];
+    const patterns = {
+        "💙💙🌹💙💙": [{m:3, c:"x30/x400", s:"rose"}, {m:5, c:"x20/x100", s:"blue"}, {m:9, c:"x50 AUTO", s:"rose"}, {m:11, c:"x25", s:"blue"}],
+        "💜💜🌹💜💙": [{m:5, c:"x50/x15", s:"rose"}, {m:7, c:"x40", s:"blue"}, {m:9, c:"x10 AUTO", s:"rose"}, {m:12, c:"x10", s:"blue"}, {m:19, c:"x300", s:"rose"}],
+        "💜💙🌹💜💙": [{m:7, c:"x50/x20", s:"rose"}, {m:4, c:"x10", s:"blue"}, {m:2, c:"x100/x10", s:"rose"}],
+        "💙💙🌹💙💜": [{m:3, c:"x80/x25", s:"rose"}, {m:7, c:"x10/x70", s:"blue"}, {m:15, c:"x3000", s:"rose"}],
+        "💜💜🌹💙💙": [{m:5, c:"x300/x20", s:"rose"}, {m:2, c:"x30/x80", s:"blue"}, {m:7, c:"x10", s:"blue"}],
+        "💙💜🌹💜💙": [{m:3, c:"x50", s:"blue"}, {m:7, c:"x150/x25", s:"rose"}],
+        "💜💙🌹💙💙": [{m:3, c:"x40/x70", s:"blue"}, {m:5, c:"x50/x200", s:"rose"}]
+    };
 
-    output += `
-      <div class="pred">
-        ⏱️ Entrée : <b>${pm.toString().padStart(2,"0")}:${ps.toString().padStart(2,"0")}</b><br>
-        🎯 Cote min : <span class="${cls}">${cote}x</span><br>
-        💥 Jackpot Chakra : ${jackpot}/8
-      </div>
-    `;
-  }
+    function tab(id, el) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('p-'+id).classList.add('active');
+        el.classList.add('active');
+    }
 
-  document.getElementById("predictions").innerHTML = output;
-  document.getElementById("resultBox").style.display = "block";
-}
+    function add(e) {
+        if(seq.length >= 5) seq = [];
+        seq.push(e);
+        document.querySelectorAll('.dot').forEach((d, i) => d.innerText = seq[i] || '');
+        if(seq.length === 5) calcCol();
+    }
+
+    function calcCol() {
+        const t = document.getElementById("t-col").value;
+        const res = document.getElementById("r-col");
+        if(!t || seq.length < 5) return;
+        const found = patterns[seq.join('')];
+        if(!found) { res.innerHTML = "<p style='grid-column:span 2; color:#333; text-align:center;'>---</p>"; return; }
+        draw(t, found, res);
+    }
+
+    function calcCt() {
+        const v = parseFloat(document.getElementById("v-ct").value);
+        const t = document.getElementById("t-ct").value;
+        const res = document.getElementById("r-ct");
+        if(!v || !t) return;
+        let l = [];
+        if(v >= 2.5 && v <= 3.5) l.push({m:2.166, c:"X3", s:"blue"});
+        else if(v >= 4.5 && v <= 6.5) l.push({m:4.166, c:"X5", s:"blue"});
+        else if(v >= 6.5) l.push({m:6.166, c:"X10", s:"rose"});
+        draw(t, l, res);
+    }
+
+    function draw(t, list, div) {
+        const [h, m, s] = t.split(':').map(Number);
+        div.innerHTML = list.map(i => {
+            let d = new Date();
+            d.setHours(h, m, s + (i.m * 60));
+            return `<div class="res-box ${i.s}"><small style="font-size:9px; color:gold;">${i.c}</small><span class="time">${d.toLocaleTimeString('fr-FR')}</span></div>`;
+        }).join('');
+    }
 </script>
-
 </body>
 </html>
