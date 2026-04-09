@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviation VIP - Contrôle Total</title>
+    <title>Aviation VIP - V18</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: sans-serif; background: #000; color: #fff; min-height: 100vh; }
@@ -33,40 +33,41 @@
         }
 
         /* --- INTERFACE --- */
-        .container { padding: 10px; max-width: 500px; margin: 0 auto; }
+        .container { padding: 10px; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #111; padding: 5px; border-radius: 10px; }
         .tab { flex: 1; padding: 10px; text-align: center; border-radius: 8px; font-size: 10px; cursor: pointer; color: #666; }
         .tab.active { background: #ff0000; color: #fff; font-weight: bold; }
 
-        .panel { display: none; background: #0a0a0a; padding: 15px; border-radius: 15px; border: 1px solid #222; }
+        .panel { display: none; background: #0a0a0a; padding: 15px; border-radius: 15px; border: 1px solid #222; flex-grow: 1; }
         .panel.active { display: block; }
 
-        /* GESTION MEMBRES */
-        .member-list { margin-top: 15px; }
         .member-item { 
             background: #111; padding: 10px; border-radius: 8px; margin-bottom: 8px;
             display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #ff0000;
         }
-        .member-info { font-size: 12px; }
-        .status-on { color: #00ff00; font-size: 9px; }
-        .status-off { color: #666; font-size: 9px; }
-        .btn-expulser { background: #330000; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; }
+        .btn-expulser { background: #330000; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 5px 10px; border-radius: 5px; font-size: 10px; }
 
-        /* STRATÉGIE */
         .dot { width: 40px; height: 40px; background: #000; border: 2px solid #ff0000; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .res-box { padding: 12px; border-radius: 10px; text-align: center; border-left: 4px solid; background: #050505; }
         .rose { border-color: #ff0055; } .blue { border-color: #0088ff; }
         .time { display: block; font-size: 1rem; color: #00ff00; font-weight: bold; }
+
+        .logout-btn { 
+            display: block; width: 100%; margin: 20px auto; padding: 15px; 
+            background: #111; color: #555; border: 1px solid #333; 
+            border-radius: 10px; font-size: 12px; cursor: pointer;
+        }
+        .logout-btn:active { background: #222; color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
         <svg class="plane-anim" viewBox="0 0 24 24"><path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/></svg>
-        <h3 style="margin-bottom:20px; letter-spacing:2px;">ACCÈS SÉCURISÉ</h3>
-        <input type="text" id="code-in" placeholder="CODE MEMBRE">
-        <button class="btn-red" onclick="login()">ACTIVER L'APPAREIL</button>
+        <h3 style="letter-spacing:2px; margin-bottom:20px;">CONNEXION</h3>
+        <input type="text" id="code-in" placeholder="CODE À 4 CHIFFRES">
+        <button class="btn-red" id="login-trigger">VÉRIFIER</button>
         <p id="err" style="color:red; font-size:11px; margin-top:10px; display:none;"></p>
     </div>
 
@@ -74,7 +75,7 @@
         <div class="tabs">
             <div class="tab active" onclick="tab('col', this)">COULEURS</div>
             <div class="tab" onclick="tab('ct', this)">COTES</div>
-            <div id="tab-admin-gen" class="tab" onclick="tab('ad', this)" style="display:none; color: #ff0000;">ADMIN</div>
+            <div id="tab-admin-gen" class="tab" onclick="tab('ad', this)" style="display:none; color: #ff0000;">GÉNÉRER</div>
             <div id="tab-admin-mem" class="tab" onclick="tab('mem', this)" style="display:none; color: #ff0000;">MEMBRES</div>
         </div>
 
@@ -92,39 +93,43 @@
         </div>
 
         <div id="p-ct" class="panel">
-            <input type="number" id="v-ct" placeholder="VALEUR COTE" step="0.01">
+            <input type="number" id="v-ct" placeholder="DERNIÈRE COTE" step="0.01">
             <input type="time" id="t-ct" step="1" onchange="calcCt()">
             <div id="r-ct" class="res-grid"></div>
         </div>
 
         <div id="p-ad" class="panel">
             <div style="text-align:center;">
-                <p style="font-size:10px; color:#666;">GÉNÉRATEUR DE CLÉS</p>
-                <div id="new-code-display" style="font-size:1.5rem; color:red; margin:15px 0;">----</div>
-                <button class="btn-red" onclick="generateCode()">CRÉER CODE UNIQUE</button>
+                <p style="font-size:10px; color:#666;">NOUVEAU CODE MEMBRE</p>
+                <div id="new-code-display" style="font-size:2.5rem; color:red; margin:20px 0; font-weight:bold;">----</div>
+                <button class="btn-red" onclick="generateCode()">GÉNÉRER 4 CHIFFRES</button>
             </div>
         </div>
 
         <div id="p-mem" class="panel">
-            <p style="font-size:10px; color:#666; margin-bottom:10px;">LISTE DES APPAREILS LIÉS</p>
-            <div id="member-list" class="member-list">
-                </div>
+            <div id="member-list"></div>
         </div>
+
+        <button class="logout-btn" id="logout-trigger">DÉCONNECTER L'APPAREIL</button>
     </div>
 
 <script>
     const getDeviceId = () => navigator.userAgent + screen.width + screen.height;
     let db = JSON.parse(localStorage.getItem("aviator_db")) || {};
 
+    // GESTIONNAIRES D'ÉVÉNEMENTS ROBUSTES
+    document.getElementById('login-trigger').addEventListener('click', login);
+    document.getElementById('logout-trigger').addEventListener('click', logout);
+
     function login() {
-        const input = document.getElementById("code-in").value.trim().toUpperCase();
+        const input = document.getElementById("code-in").value.trim();
         const err = document.getElementById("err");
         const device = getDeviceId();
 
         if (input === "091110") {
-            document.getElementById("tab-admin-gen").style.display = "block";
-            document.getElementById("tab-admin-mem").style.display = "block";
+            document.querySelectorAll('[id^="tab-admin"]').forEach(el => el.style.display = "block");
             document.getElementById("auth-screen").style.display = "none";
+            localStorage.setItem("admin_active", "true");
             updateMemberList();
             return;
         }
@@ -137,23 +142,34 @@
                 document.getElementById("auth-screen").style.display = "none";
             } else {
                 err.style.display = "block";
-                err.innerText = "ACCÈS BLOQUÉ : DÉJÀ LIÉ À UN AUTRE TÉLÉPHONE.";
+                err.innerText = "CE CODE EST DÉJÀ LIÉ À UN AUTRE TÉLÉPHONE.";
             }
         } else {
             err.style.display = "block";
-            err.innerText = "CODE INCONNU.";
+            err.innerText = "CODE INVALIDE.";
         }
+    }
+
+    function logout() {
+        localStorage.removeItem("my_active_session");
+        localStorage.removeItem("admin_active");
+        location.href = location.href; // Refresh forcé compatible tout mobile
     }
 
     window.onload = () => {
         const session = localStorage.getItem("my_active_session");
-        if (session && db[session] === getDeviceId()) {
+        const isAdmin = localStorage.getItem("admin_active");
+        
+        if (isAdmin === "true") {
+            document.querySelectorAll('[id^="tab-admin"]').forEach(el => el.style.display = "block");
+            document.getElementById("auth-screen").style.display = "none";
+        } else if (session && db[session] === getDeviceId()) {
             document.getElementById("auth-screen").style.display = "none";
         }
     };
 
     function generateCode() {
-        const code = "AV-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
         db[code] = null;
         localStorage.setItem("aviator_db", JSON.stringify(db));
         document.getElementById("new-code-display").innerText = code;
@@ -164,30 +180,23 @@
         const listDiv = document.getElementById("member-list");
         listDiv.innerHTML = "";
         for (let code in db) {
-            const isLinked = db[code] !== null;
             listDiv.innerHTML += `
                 <div class="member-item">
-                    <div class="member-info">
-                        <b>${code}</b><br>
-                        <span class="${isLinked ? 'status-on' : 'status-off'}">
-                            ${isLinked ? '● Connecté' : '○ Libre'}
-                        </span>
-                    </div>
-                    <button class="btn-expulser" onclick="expulser('${code}')">EXPULSER</button>
-                </div>
-            `;
+                    <div style="font-size:13px;"><b>Code: ${code}</b><br><small style="color:${db[code]?'#0f0':'#555'}">${db[code]?'Actif':'Libre'}</small></div>
+                    <button class="btn-expulser" onclick="expulser('${code}')">SUPPRIMER</button>
+                </div>`;
         }
     }
 
     function expulser(code) {
-        if(confirm("Voulez-vous vraiment expulser ce membre ?")) {
+        if(confirm("Supprimer ce code ?")) {
             delete db[code];
             localStorage.setItem("aviator_db", JSON.stringify(db));
             updateMemberList();
         }
     }
 
-    // --- STRATÉGIES ---
+    // --- LOGIQUE STRATÉGIE ---
     let seq = [];
     const patterns = {
         "💙💙🌹💙💙": [{m:3, c:"x30/x400", s:"rose"}, {m:5, c:"x20/x100", s:"blue"}, {m:9, c:"x50 AUTO", s:"rose"}, {m:11, c:"x25", s:"blue"}],
